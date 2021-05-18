@@ -1,30 +1,29 @@
-import {decodePath} from "./db/util";
-import {assert} from "./assert";
+import {decodePath, encodePath} from "./db/util";
 import {db} from "./db/db";
 
-export class InMemoryRootNode<T> implements db.RootNode<T> {
-    public children: InMemoryNode<T>[] = [];
+export class InMemoryNode<T> implements db.RootNode<T> {
+    public children: InMemoryDocumentNode<T>[] = [];
+
+    public appendDocument(document: T): InMemoryDocumentNode<T> {
+        const node = new InMemoryDocumentNode(this, this.children.length, document);
+        this.children.push(node);
+        return node;
+    }
 }
 
-export class InMemoryNode<T> implements db.Node<T> {
-    public static link<T>(parent: db.NodeWithChildren<T>, child: InMemoryNode<T>) {
-        assert(!child.parent, "Can't link nodes, child already has parent")
-        const key = parent.children.push(child);
-        child.setKey(key);
-        child.setParent(parent);
-    }
-
-    public parent: null | db.NodeWithChildren<T> = null;
-    public children: InMemoryNode<T>[] = [];
+export class InMemoryDocumentNode<T> extends InMemoryNode<T> implements db.Node<T> {
+    public children: InMemoryDocumentNode<T>[] = [];
     public deleted = false;
 
     public constructor(
+        public parent: InMemoryNode<T>,
         public key: db.NodeKey,
         public document: T,
-    ) {}
+    ) {
+        super();
+    }
 
     public delete() {
-        this.deleteChildren();
         this.deleted = true;
     }
 
@@ -32,18 +31,25 @@ export class InMemoryNode<T> implements db.Node<T> {
         this.document = document;
     }
 
-    private deleteChildren() {
-        for (const child of this.children.values()) {
-            child.delete();
-        }
+    public getHandle(): db.DocumentHandle<T> {
+        return {
+            path: encodePath(this.path),
+            document: this.document,
+        };
     }
 
-    private setKey(key: db.NodeKey) {
-        this.key = key;
+    public get path(): db.NodePath {
+        return [...this.upward()]
+            .map((node) => node.key)
+            .reverse();
     }
 
-    private setParent(parent: db.NodeWithChildren<T>) {
-        this.parent = parent;
+    public *upward(): IterableIterator<InMemoryDocumentNode<T>> {
+        let node: null | InMemoryDocumentNode<T> = this;
+        do {
+            yield node;
+        // eslint-disable-next-line no-cond-assign
+        } while (node = castToDocumentNode(node.parent));
     }
 }
 
@@ -58,25 +64,24 @@ export interface InMemoryStorageSnapshot<T> {
 
 export class InMemoryStorage<T> implements db.Storage<T> {
     public static create<T>(sn?: InMemoryStorageRootSnapshot<T>): InMemoryStorage<T> {
-        const root = new InMemoryRootNode<T>();
+        const root = new InMemoryNode<T>();
         if (sn && sn.children) {
-            root.children = this.createChildren(sn.children);
+            this.buildFromSnapshot(root, sn.children);
         }
         return new InMemoryStorage(root);
     }
 
-    private static createChildren<T>(children: InMemoryStorageSnapshot<T>[]): InMemoryNode<T>[] {
-        return children.map((sn, i) => {
-            const node = new InMemoryNode(i, sn.document)
+    private static buildFromSnapshot<T>(parent: InMemoryNode<T>, snapshots: InMemoryStorageSnapshot<T>[]) {
+        for (const sn of snapshots) {
+            const node = parent.appendDocument(sn.document);
             if (sn.children) {
-                node.children = this.createChildren(sn.children);
+                this.buildFromSnapshot(node, sn.children);
             }
-            return node;
-        });
+        }
     }
 
     constructor(
-        public readonly root: InMemoryRootNode<T>
+        public readonly root: InMemoryNode<T>
     ) {}
 
     public queryDocument(path: db.EncodedNodePath): null | T {
@@ -87,8 +92,8 @@ export class InMemoryStorage<T> implements db.Storage<T> {
         return node.document;
     }
 
-    private queryDocumentNode(path: db.NodePath): null | InMemoryNode<T> {
-        let currentNode: db.NodeWithChildren<T> = this.root;
+    private queryDocumentNode(path: db.NodePath): null | InMemoryDocumentNode<T> {
+        let currentNode: InMemoryNode<T> = this.root;
 
         for (const p of path) {
             currentNode = currentNode.children[p];
@@ -97,14 +102,14 @@ export class InMemoryStorage<T> implements db.Storage<T> {
             }
         }
 
-        if (isDocumentNode(currentNode)) {
-            return currentNode;
-        } else {
-            return null;
-        }
+        return castToDocumentNode(currentNode);
     }
 }
 
-function isDocumentNode<T>(node: db.NodeWithChildren<T>): node is InMemoryNode<T> {
+function isDocumentNode<T>(node: InMemoryNode<T>): node is InMemoryDocumentNode<T> {
     return "document" in node;
+}
+
+function castToDocumentNode<T>(node: InMemoryNode<T>): null | InMemoryDocumentNode<T> {
+    return isDocumentNode(node) ? node : null;
 }
