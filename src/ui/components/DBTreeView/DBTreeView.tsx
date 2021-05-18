@@ -8,6 +8,7 @@ import styles from "./DBTreeView.module.sass"
 
 interface Props<Document> {
     nodes: db.Node<Document>[]
+    onSelect: (handle: db.DocumentHandle<Document>) => void;
 }
 
 export const CreateDBTreeView = <Document extends any>(hocProps: HOCProps<Document>) => {
@@ -20,9 +21,14 @@ export const CreateDBTreeView = <Document extends any>(hocProps: HOCProps<Docume
             setSelectedNode(node);
         }, []);
 
+        const onSelect = useCallback((node: db.Node<Document>) => {
+            props.onSelect(node.getHandle());
+            setSelectedNode(undefined);
+        }, [props]);
+
         return (
             <div className={styles.DBTreeView}>
-                <Children nodes={props.nodes} selectedNode={selectedNode} onNodeSelect={onNodeSelect}/>
+                <Children nodes={props.nodes} selectedNode={selectedNode} onNodeSelect={onNodeSelect} onNodeActivate={onSelect}/>
             </div>
         );
     };

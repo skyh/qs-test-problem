@@ -10,6 +10,7 @@ interface Props<Document> {
     nodes: db.Node<Document>[]
     selectedNode?: db.Node<Document>
     onNodeSelect: (node: db.Node<Document>) => void
+    onNodeActivate: (node: db.Node<Document>) => void
 }
 
 export const CreateChildren = <Document extends any>(hocProps: HOCProps<Document>) => {
@@ -22,9 +23,9 @@ export const CreateChildren = <Document extends any>(hocProps: HOCProps<Document
             <ul className={styles.Children}>
                 {nodes.map(node => (
                     <li key={node.key}>
-                        <Row node={node} selected={props.selectedNode === node} onSelect={props.onNodeSelect}/>
+                        <Row node={node} selected={props.selectedNode === node} onSelect={props.onNodeSelect} onActivate={props.onNodeActivate}/>
                         {node.children.length > 0 &&
-                            <Children nodes={node.children} selectedNode={props.selectedNode} onNodeSelect={props.onNodeSelect}/>
+                            <Children nodes={node.children} selectedNode={props.selectedNode} onNodeSelect={props.onNodeSelect} onNodeActivate={props.onNodeActivate}/>
                         }
                     </li>))}
             </ul>

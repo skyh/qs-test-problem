@@ -1,6 +1,6 @@
 export namespace db {
     export type NodeKey = number
-    export type NodePath = NodeKey[]
+    export type NodePath = ReadonlyArray<NodeKey>
     export type EncodedNodePath = string
 
     export interface NodeWithChildren<Document> {
@@ -17,6 +17,13 @@ export namespace db {
 
         alterDocument(document: Document): void
         delete(): void
+
+        getHandle(): db.DocumentHandle<Document>
+    }
+
+    export interface DocumentHandle<Document> {
+        path: EncodedNodePath
+        document: Document
     }
 
     export interface Storage<Document> {

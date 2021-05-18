@@ -19,6 +19,10 @@ export const App: FC = () => {
         setStorage(InMemoryStorage.create(defaults));
     }, []);
 
+    const onDocumentSelected = useCallback((handle: db.DocumentHandle<AppDocument>) => {
+        console.log("onDocumentSelected", handle)
+    }, []);
+
     return (
         <div className={styles.App}>
             <h1>Cached Tree View Problem</h1>
@@ -26,7 +30,7 @@ export const App: FC = () => {
                 Reset
             </button>
             <ThreeColLayout>
-                <DBTreeView nodes={storage.root.children}/>
+                <DBTreeView nodes={storage.root.children} onSelect={onDocumentSelected}/>
                 <Fragment>
                     Cache view
                 </Fragment>
