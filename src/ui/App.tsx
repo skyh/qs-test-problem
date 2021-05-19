@@ -19,8 +19,8 @@ export const App: FC = () => {
         setStorage(InMemoryStorage.create(defaults));
     }, []);
 
-    const onDocumentSelected = useCallback((handle: db.DocumentHandle<AppDocument>) => {
-        console.log("onDocumentSelected", handle)
+    const onDocumentActivated = useCallback((handle: db.DocumentHandle<AppDocument>) => {
+        console.log("onDocumentActivated", handle)
     }, []);
 
     return (
@@ -30,7 +30,7 @@ export const App: FC = () => {
                 Reset
             </button>
             <ThreeColLayout>
-                <DBTreeView nodes={storage.root.children} onSelect={onDocumentSelected}/>
+                <DBTreeView nodes={storage.root.children} onActivate={onDocumentActivated}/>
                 <Fragment>
                     Cache view
                 </Fragment>
