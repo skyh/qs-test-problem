@@ -1,7 +1,22 @@
 export namespace db {
     export type NodeKey = number
-    export type NodePath = ReadonlyArray<NodeKey>
     export type EncodedNodePath = string
+
+    export interface NodePath {
+        readonly keys: ReadonlyArray<NodeKey>
+
+        isRoot(): boolean
+
+        getKey(): NodeKey
+        serialize(): EncodedNodePath
+
+        equals(other: NodePath): boolean
+        includes(other: NodePath): boolean
+
+        getParent(): NodePath
+        appendChild(key: NodeKey): NodePath
+        relativeTo(other: NodePath): NodePath
+    }
 
     export interface NodeWithChildren<Document> {
         readonly children: Node<Document>[]

@@ -1,11 +1,9 @@
 import {assert} from "./assert";
 import {db} from "./db/db";
-import {decodePath, encodePath, getParentPath, getPathKey} from "./db/util";
-
-type HandlePath = db.DocumentHandle<any>["path"];
+import {Path} from "./db/Path";
 
 interface NodeWithHandle {
-    handlePath: HandlePath
+    handlePath: db.NodePath
 }
 
 export class Node<T> {
@@ -21,7 +19,7 @@ export class Node<T> {
         newNode.key = oldNode.key;
     }
 
-    public appendMissing(handlePath: HandlePath): MissingNode<T> {
+    public appendMissing(handlePath: db.NodePath): MissingNode<T> {
         return this.pushNode(new MissingNode(this, handlePath));
     }
 
@@ -35,7 +33,7 @@ export class Node<T> {
 
     private reorderChildrenByHandlePath() {
         this.children.sort((a, b) => {
-            return getPathKey(a.handlePath) - getPathKey(b.handlePath);
+            return a.handlePath.getKey() - b.handlePath.getKey();
         });
         this.refreshChildrenKeys();
     }
@@ -52,7 +50,7 @@ export class MissingNode<T> extends Node<T> implements NodeWithHandle {
 
     constructor(
         public readonly parent: Node<T>,
-        public readonly handlePath: HandlePath,
+        public readonly handlePath: db.NodePath,
     ) {
        super();
     }
@@ -76,7 +74,7 @@ export class HandleNode<Document> extends Node<Document> implements NodeWithHand
     }
 
     get handlePath() {
-        return this.handle.path;
+        return Path.create(this.handle.path);
     }
 }
 
@@ -95,28 +93,28 @@ export class StoragePartialView<T> {
     ) {}
 
     public addHandle(handle: db.DocumentHandle<T>) {
-        const existingNode = this.getNodeWithHandlePath(handle.path);
+        const handlePath = Path.create(handle.path);
+        const existingNode = this.getNodeWithHandlePath(handlePath);
 
         if (existingNode) {
             if (existingNode instanceof HandleNode) {
                 existingNode.handle = handle;
             } else if (existingNode instanceof MissingNode) {
-                const replacement = existingNode.createHandleNode(handle);
-                existingNode.parent.replaceNode(existingNode, replacement);
+                const handleNode = existingNode.createHandleNode(handle);
+                existingNode.parent.replaceNode(existingNode, handleNode);
             } else {
                 throw new Error("Not implemented");
             }
             return;
         }
 
-        const parentNode = this.getOrCreateParentNodeForPath(handle.path);
-
+        const parentNode = this.getOrCreateParentNodeForPath(handlePath);
         const node = parentNode.appendHandle(handle);
-        this.nodesCacheByHandlePath.set(handle.path, node);
+        this.setNodeWithHandlePath(handlePath, node);
     }
 
     public queryDocument(path: db.EncodedNodePath): undefined | T {
-        const node = this.getNodeWithHandlePath(path);
+        const node = this.getNodeWithHandlePath(Path.create(path));
         if (!node) return
         if (node instanceof MissingNode) return
         return node.handle.document;
@@ -125,22 +123,25 @@ export class StoragePartialView<T> {
     private getNode(path: db.NodePath): undefined | Node<T> {
         let currentNode = this.root;
 
-        for (const p of path) {
-            currentNode = currentNode.children[p];
+        for (const key of path.keys) {
+            currentNode = currentNode.children[key];
             if (!currentNode) return;
         }
 
         return currentNode;
     }
 
-    private getNodeWithHandlePath(path: db.EncodedNodePath): undefined | CacheNode<T> {
-        return this.nodesCacheByHandlePath.get(path);
+    private getNodeWithHandlePath(path: db.NodePath): undefined | CacheNode<T> {
+        return this.nodesCacheByHandlePath.get(path.serialize());
     }
 
-    private getOrCreateParentNodeForPath(path: db.EncodedNodePath): Node<T> {
-        const nodePath = decodePath(path);
-        const parentPath = getParentPath(nodePath);
-        const parentNode = this.getNodeWithHandlePath(encodePath(parentPath));
+    private setNodeWithHandlePath(path: db.NodePath, node: CacheNode<T>): void {
+        this.nodesCacheByHandlePath.set(path.serialize(), node);
+    }
+
+    private getOrCreateParentNodeForPath(path: db.NodePath): Node<T> {
+        const parentPath = path.getParent();
+        const parentNode = this.getNodeWithHandlePath(parentPath);
 
         if (parentNode) {
             return parentNode;
@@ -151,17 +152,22 @@ export class StoragePartialView<T> {
 
     private createMissingNodes(path: db.NodePath): Node<T> {
         const closestNode = this.getClosestNodeWithHandlePath(path);
-        const pathToCreate = closestNode ? path.slice(decodePath(closestNode.handlePath).length) : path.slice();
-        return this.createMissingNodesStartingFrom(closestNode || this.root, pathToCreate);
+
+        if (closestNode) {
+            const pathFromClosesNode = path.relativeTo(closestNode.handlePath);
+            return this.createMissingNodesStartingFrom(closestNode, pathFromClosesNode);
+        } else {
+            return this.createMissingNodesStartingFrom(this.root, path);
+        }
     }
 
-    private createMissingNodesStartingFrom(node: Node<T> | CacheNode<T>, path: db.NodePath): typeof node {
-        for (const p of path) {
-            const parentPath = isCacheNode(node) ? decodePath(node.handlePath) : [];
-            const newPath = encodePath([...parentPath, p]);
+    private createMissingNodesStartingFrom(initialNode: Node<T> | CacheNode<T>, path: db.NodePath): typeof node {
+        let node = initialNode;
+        for (const key of path.keys) {
+            const newPath = isCacheNode(node) ? node.handlePath.appendChild(key) : Path.create([key]);
             node = node.appendMissing(newPath);
             if (isCacheNode(node)) {
-                this.nodesCacheByHandlePath.set(newPath, node);
+                this.setNodeWithHandlePath(newPath, node);
             } else {
                 throw new Error("Not implemented");
             }
@@ -170,19 +176,15 @@ export class StoragePartialView<T> {
     }
 
     private getClosestNodeWithHandlePath(path: db.NodePath): undefined | CacheNode<T> {
-        const probePath = path.slice();
-        let result: undefined | CacheNode<T>;
+        let probePath = path;
 
-        while (probePath.length) {
-            result = this.getNodeWithHandlePath(encodePath(probePath));
+        while (!probePath.isRoot()) {
+            const result = this.getNodeWithHandlePath(probePath);
             if (result) {
                 return result;
-            } else {
-                probePath.pop();
             }
+            probePath = probePath.getParent();
         }
-
-        return result;
     }
 }
 

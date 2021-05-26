@@ -1,4 +1,4 @@
-import {InMemoryDocumentNode, InMemoryStorage} from "./InMemoryStorage";
+import {InMemoryStorage} from "./InMemoryStorage";
 
 type TestStorageDocument = string;
 
@@ -58,7 +58,7 @@ describe("InMemoryNode", () => {
                 }],
             });
 
-            expect(storage.root.children[0].children[0].children[1].path).toEqual([0, 0, 1]);
+            expect(storage.root.children[0].children[0].children[1].path.keys).toEqual([0, 0, 1]);
         });
     });
 });

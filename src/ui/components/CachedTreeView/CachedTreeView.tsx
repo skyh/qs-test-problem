@@ -24,7 +24,7 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
 
         const onNodeActivate = useCallback((node: CacheNode<Document>) => {
             if (node instanceof MissingNode) {
-                props.onDocumentRequest(node.handlePath);
+                props.onDocumentRequest(node.handlePath.serialize());
             }
         }, [props]);
 

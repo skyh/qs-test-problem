@@ -1,4 +1,4 @@
-import {HandleNode, MissingNode, StoragePartialView} from "./StoragePartialView";
+import {MissingNode, StoragePartialView} from "./StoragePartialView";
 
 type TestDocument = string;
 

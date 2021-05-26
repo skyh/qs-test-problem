@@ -1,5 +1,5 @@
-import {decodePath, encodePath} from "./db/util";
 import {db} from "./db/db";
+import {Path} from "./db/Path";
 
 export class InMemoryNode<T> implements db.RootNode<T> {
     public children: InMemoryDocumentNode<T>[] = [];
@@ -32,15 +32,15 @@ export class InMemoryDocumentNode<T> extends InMemoryNode<T> implements db.Node<
 
     public getHandle(): db.DocumentHandle<T> {
         return {
-            path: encodePath(this.path),
+            path: this.path.serialize(),
             document: this.document,
         };
     }
 
     public get path(): db.NodePath {
-        return [...this.upward()]
+        return Path.create([...this.upward()]
             .map((node) => node.key)
-            .reverse();
+            .reverse());
     }
 
     public *upward(): IterableIterator<InMemoryDocumentNode<T>> {
@@ -84,7 +84,7 @@ export class InMemoryStorage<T> implements db.Storage<T> {
     ) {}
 
     public queryDocument(path: db.EncodedNodePath): null | T {
-        const node = this.queryDocumentNode(decodePath(path));
+        const node = this.queryDocumentNode(Path.create(path));
         if (!node) {
             return null;
         }
@@ -94,8 +94,8 @@ export class InMemoryStorage<T> implements db.Storage<T> {
     private queryDocumentNode(path: db.NodePath): null | InMemoryDocumentNode<T> {
         let currentNode: InMemoryNode<T> = this.root;
 
-        for (const p of path) {
-            currentNode = currentNode.children[p];
+        for (const key of path.keys) {
+            currentNode = currentNode.children[key];
             if (!currentNode) {
                 return null;
             }
