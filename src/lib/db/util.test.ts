@@ -1,4 +1,4 @@
-import {decodePath, encodePath} from "./util";
+import {decodePath, encodePath, getParentPath, getPathKey} from "./util";
 
 describe("decodePath", () => {
     it("should decode sample path", () => {
@@ -29,5 +29,37 @@ describe("encodePath", () => {
 
     it("should encode sample path", () => {
         expect(encodePath([5, 4, 3])).toEqual("/5/4/3")
+    });
+});
+
+describe("getParentPath", () => {
+    describe("encoded", () => {
+        it("should throw for root path", () => {
+            expect(() => {
+                getParentPath("/");
+            }).toThrow();
+        });
+
+        it("should return parent path for /0", () => {
+            expect(getParentPath("/0")).toEqual("/");
+        });
+
+        it("should return parent for N-l;evel path", () => {
+            expect(getParentPath("/0/1/45")).toEqual("/0/1");
+        });
+    });
+});
+
+describe("getPathKey", () => {
+    describe("encoded", () => {
+        it("should throw for root path", () => {
+            expect(() => {
+                getPathKey("/");
+            }).toThrow();
+        });
+
+        it("should return own key", () => {
+            expect(getPathKey("/0/12/32/343/42")).toEqual(42);
+        });
     });
 });

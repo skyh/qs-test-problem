@@ -12,7 +12,6 @@ export class InMemoryNode<T> implements db.RootNode<T> {
 }
 
 export class InMemoryDocumentNode<T> extends InMemoryNode<T> implements db.Node<T> {
-    public children: InMemoryDocumentNode<T>[] = [];
     public deleted = false;
 
     public constructor(
