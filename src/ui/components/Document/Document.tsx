@@ -1,6 +1,6 @@
 import React, {FC} from "react";
 
-import {AppDocument} from "../AppDocument";
+import {AppDocument} from "../../../AppDocument";
 
 interface Props {
     document: AppDocument

@@ -25,12 +25,16 @@ export const CreateHandleNodeRow = <Document extends any>(hocProps: HOCProps<Doc
         const className = useMemo(() => {
             return clsx(styles.Row, {
                 [styles.selected]: props.selected,
+                [styles.changed]: props.node.changed,
             });
-        }, [props.selected]);
+        }, [props]);
+
+        const {node} = props;
+        const title = node.changed ? "Document was changed" : undefined;
 
         return (
-            <div className={className} onMouseDown={onMouseDown} onDoubleClick={onDoubleClick}>
-                <DocumentComponent document={props.node.handle.document}/>
+            <div className={className} onMouseDown={onMouseDown} onDoubleClick={onDoubleClick} title={title}>
+                <DocumentComponent document={node.editingDocument}/>
             </div>
         );
     };

@@ -64,6 +64,8 @@ export class MissingNode<T> extends Node<T> implements NodeWithHandle {
 }
 
 export class HandleNode<Document> extends Node<Document> implements NodeWithHandle {
+    public static readonly EmptyDocument = undefined; // TODO: in theory, undefined could also be a valid document
+
     public key: db.NodeKey = -1;
 
     public constructor(
@@ -73,8 +75,25 @@ export class HandleNode<Document> extends Node<Document> implements NodeWithHand
         super();
     }
 
+    public editedDocument: typeof HandleNode.EmptyDocument | Document = HandleNode.EmptyDocument;
+
     get handlePath() {
         return Path.create(this.handle.path);
+    }
+
+    get changed() {
+        return this.editedDocument !== HandleNode.EmptyDocument;
+    }
+
+    public get editingDocument(): Document {
+        if (this.editedDocument === HandleNode.EmptyDocument) {
+            return this.handle.document;
+        }
+        return this.editedDocument
+    }
+
+    public setEditedDocument(document: Document) {
+        this.editedDocument = document;
     }
 }
 

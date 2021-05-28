@@ -13,6 +13,6 @@ export interface HOCProps<Document> {
      */
     DocumentEditorComponent: ComponentType<{
         document: Document
-        onEdited: (document: Document) => {}
+        onEdited(document: Document): void
     }>
 }

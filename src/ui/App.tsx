@@ -9,9 +9,9 @@ import {InMemoryStorage} from "../lib/InMemoryStorage";
 import {defaults} from "../defaults";
 import {CreateCachedTreeView} from "./components/CachedTreeView/CachedTreeView";
 import {ThreeColLayout} from "./components/ThreeColLayout/ThreeColLayout";
-import {Document} from "./Document";
+import {Document} from "./components/Document/Document";
 import {CreateDBTreeView} from './components/DBTreeView/DBTreeView';
-import {DocumentEditor} from "./DocumentEditor";
+import {DocumentEditor} from "./components/DocumentEditor/DocumentEditor";
 
 const DBTreeView = CreateDBTreeView({
     DocumentComponent: Document
@@ -38,24 +38,36 @@ export const App: FC = () => {
         setHack(hack => hack + 1);
     }, [cache]);
 
-    const onDocumentRequest = useCallback((path: db.EncodedNodePath) => {
+    const onCacheDocumentRequest = useCallback((path: db.EncodedNodePath) => {
         const document = storage.queryDocument(path);
         assert(document);
         onDocumentActivated({
             path,
             document,
         });
-    }, [storage]);
+    }, [storage, onDocumentActivated]);
 
     return (
         <div className={styles.App}>
             <h1>Cached Tree View Problem</h1>
-            <button onClick={onResetClick}>
-                Reset
-            </button>
+            <div className={styles.Controls}>
+                <button onClick={onResetClick}>
+                    Reset
+                </button>
+            </div>
             <ThreeColLayout>
-                <DBTreeView nodes={storage.root.children} onActivate={onDocumentActivated}/>
-                <CachedTreeView key={hack} nodes={cache.root.children} onDocumentRequest={onDocumentRequest}/>
+                <Fragment>
+                    <div className={styles.Hint}>
+                        Cache view. Double click on "Missing document" to request it from the database.
+                    </div>
+                    <CachedTreeView key={hack} nodes={cache.root.children} onDocumentRequest={onCacheDocumentRequest}/>
+                </Fragment>
+                <Fragment>
+                    <div className={styles.Hint}>
+                        Database view. Double click to push document into the cache.
+                    </div>
+                    <DBTreeView nodes={storage.root.children} onActivate={onDocumentActivated}/>
+                </Fragment>
                 <Fragment>
                     controls
                 </Fragment>
