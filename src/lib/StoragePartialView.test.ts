@@ -85,10 +85,48 @@ describe("StoragePartialView", () => {
             expect(storage.root.children[0].children[0].children[1]).toHaveProperty("handle", handles[1]);
         });
     });
+
+    describe("getChanges", () => {
+        it("should return empty array if no changes were made", () => {
+            const handles = [{
+                path: "/0/0/0",
+                document: "document at /0/0/0",
+            }, {
+                path: "/0/0/1",
+                document: "document at /0/0/1",
+            }];
+
+            storage.addHandle(handles[0]);
+            storage.addHandle(handles[1]);
+
+            expect(storage.getChanges()).toEqual([]);
+        });
+
+        it("should include changes of all changed nodes", () => {
+            const handles = [{
+                path: "/0/0/0",
+                document: "document at /0/0/0",
+            }, {
+                path: "/0/0/1",
+                document: "document at /0/0/1",
+            }];
+
+            const node0 = storage.addHandle(handles[0]);
+            const node1 = storage.addHandle(handles[1]);
+
+            node0.setEditedDocument("edited document at /0/0/0");
+            node1.setEditedDocument("edited document at /0/0/1");
+
+            expect(storage.getChanges()).toEqual([
+                {handlePath: "/0/0/0", document: "edited document at /0/0/0"},
+                {handlePath: "/0/0/1", document: "edited document at /0/0/1"},
+            ]);
+        });
+    });
 });
 
 describe("regress", () => {
-    test.only("no mis-inserting", () => {
+    test("no mis-inserting", () => {
         const storage = StoragePartialView.create<string>();
 
         const handles = [{

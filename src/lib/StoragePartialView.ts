@@ -1,6 +1,7 @@
 import {assert} from "./assert";
 import {db} from "./db/db";
 import {Path} from "./db/Path";
+import {NodeChange} from "./NodeChange";
 
 interface NodeWithHandle {
     handlePath: db.NodePath
@@ -85,11 +86,24 @@ export class HandleNode<Document> extends Node<Document> implements NodeWithHand
         return this.editedDocument !== HandleNode.EmptyDocument;
     }
 
+    public getChanges(): undefined | NodeChange<Document> {
+        if (!this.changed) return;
+
+        return {
+            handlePath: this.handle.path,
+            document: this.editingDocument,
+        };
+    }
+
     public get editingDocument(): Document {
         if (this.editedDocument === HandleNode.EmptyDocument) {
             return this.handle.document;
         }
         return this.editedDocument
+    }
+
+    public resetEditedDocument() {
+        this.editedDocument = HandleNode.EmptyDocument;
     }
 
     public setEditedDocument(document: Document) {
@@ -111,25 +125,28 @@ export class StoragePartialView<T> {
         public readonly root: Node<T>,
     ) {}
 
-    public addHandle(handle: db.DocumentHandle<T>) {
+    public addHandle(handle: db.DocumentHandle<T>): HandleNode<T> {
         const handlePath = Path.create(handle.path);
         const existingNode = this.getNodeWithHandlePath(handlePath);
 
         if (existingNode) {
             if (existingNode instanceof HandleNode) {
+                existingNode.resetEditedDocument(); // TODO: Move to a method
                 existingNode.handle = handle;
+                return existingNode;
             } else if (existingNode instanceof MissingNode) {
                 const handleNode = existingNode.createHandleNode(handle);
                 existingNode.parent.replaceNode(existingNode, handleNode);
+                return handleNode;
             } else {
                 throw new Error("Not implemented");
             }
-            return;
         }
 
         const parentNode = this.getOrCreateParentNodeForPath(handlePath);
         const node = parentNode.appendHandle(handle);
         this.setNodeWithHandlePath(handlePath, node);
+        return node;
     }
 
     public queryDocument(path: db.EncodedNodePath): undefined | T {
@@ -137,6 +154,31 @@ export class StoragePartialView<T> {
         if (!node) return
         if (node instanceof MissingNode) return
         return node.handle.document;
+    }
+
+    // FIXME: Move this to node itself?
+    public getChanges(): Array<NodeChange<T>> {
+        return Array.from(this.iterateChanges());
+    }
+
+    public *iterateChanges(): IterableIterator<NodeChange<T>> {
+        for (const node of this.iterateDFS()) {
+            if (!isHandleNode<T>(node)) continue;
+            const changes = node.getChanges();
+            if (changes != null) yield changes;
+        }
+    }
+
+    // FIXME: Make this node's method?
+    private iterateDFS(): IterableIterator<Node<T>> {
+        function *dfs(node: Node<T>): IterableIterator<Node<T>> {
+            yield node;
+            for (const child of node.children) {
+                yield* dfs(child);
+            }
+        }
+
+        return dfs(this.root);
     }
 
     private getNode(path: db.NodePath): undefined | Node<T> {
@@ -209,4 +251,8 @@ export class StoragePartialView<T> {
 
 function isCacheNode<T>(node: any): node is CacheNode<T> {
     return node instanceof HandleNode || node instanceof MissingNode;
+}
+
+function isHandleNode<T>(node: any): node is HandleNode<T> {
+    return node instanceof HandleNode;
 }

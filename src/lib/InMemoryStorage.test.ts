@@ -37,6 +37,31 @@ describe("InMemoryStorage", () => {
             expect(storage.queryDocument("/0/1/0")).toEqual("child at /0/1/0");
         });
     });
+
+    describe("applyChanges", () => {
+        it("should apply changes to storage", () => {
+            const storage = InMemoryStorage.create<TestStorageDocument>({
+                children: [{
+                    document: "child at /0",
+                    children: [{
+                        document: "child at /0/0",
+                    }, {
+                        document: "child at /0/1",
+                        children: [{
+                            document: "child at /0/1/0",
+                        }],
+                    }],
+                }],
+            });
+
+            storage.applyChanges([{
+                handlePath: "/0",
+                document: "new document at /0",
+            }]);
+
+            expect(storage.queryDocument("/0")).toEqual("new document at /0")
+        });
+    });
 });
 
 describe("InMemoryNode", () => {

@@ -25,6 +25,11 @@ const CachedTreeView = CreateCachedTreeView({
 export const App: FC = () => {
     const [storage, setStorage] = useState(InMemoryStorage.create<AppDocument>());
     const [cache, setCache] = useState(StoragePartialView.create<AppDocument>());
+    const resetCache = useCallback(() => {
+        const newCache = StoragePartialView.create<AppDocument>();
+        setCache(newCache);
+        return newCache;
+    }, [setCache]);
 
     const [hack, setHack] = useState(0); // FIXME: use observables for auto re-render
 
@@ -47,10 +52,27 @@ export const App: FC = () => {
         });
     }, [storage, onDocumentActivated]);
 
+    const onApplyChangesClick = useCallback(() => {
+        const changes = cache.getChanges();
+        storage.applyChanges(changes);
+
+        for (const change of changes) {
+            const changedDocument = storage.queryDocument(change.handlePath);
+            if (changedDocument) {
+                console.log("add changed document", change.handlePath, changedDocument)
+                cache.addHandle({
+                    path: change.handlePath,
+                    document: changedDocument,
+                });
+            }
+        }
+        setHack(x => x + 1);
+    }, [storage, cache, setHack]);
+
     return (
         <div className={styles.App}>
             <h1>Cached Tree View Problem</h1>
-            <div className={styles.Controls}>
+            <div className={styles.TopControls}>
                 <button onClick={onResetClick}>
                     Reset
                 </button>
@@ -69,7 +91,11 @@ export const App: FC = () => {
                     <DBTreeView nodes={storage.root.children} onActivate={onDocumentActivated}/>
                 </Fragment>
                 <Fragment>
-                    controls
+                    <div className={styles.CacheControls}>
+                        <button onClick={onApplyChangesClick}>
+                            Apply changes →
+                        </button>
+                    </div>
                 </Fragment>
             </ThreeColLayout>
         </div>

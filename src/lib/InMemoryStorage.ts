@@ -1,5 +1,7 @@
+import {assert} from "./assert";
 import {db} from "./db/db";
 import {Path} from "./db/Path";
+import {NodeChange} from "./NodeChange";
 
 export class InMemoryNode<T> implements db.RootNode<T> {
     public children: InMemoryDocumentNode<T>[] = [];
@@ -89,6 +91,18 @@ export class InMemoryStorage<T> implements db.Storage<T> {
             return null;
         }
         return node.document;
+    }
+
+    public applyChanges(changes: Array<NodeChange<T>>) {
+        for (const change of changes) {
+            this.applyChange(change);
+        }
+    }
+
+    private applyChange(change: NodeChange<T>) {
+        const node = this.queryDocumentNode(Path.create(change.handlePath));
+        assert(node, "Attempt to apply change to missing node");
+        node.document = change.document;
     }
 
     private queryDocumentNode(path: db.NodePath): null | InMemoryDocumentNode<T> {
