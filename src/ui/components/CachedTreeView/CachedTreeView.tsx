@@ -1,6 +1,8 @@
-import React, {FC, useCallback, useState} from "react";
+import React, {FC, MouseEventHandler, useCallback, useState} from "react";
 
 import {CacheNode, HandleNode, MissingNode} from "../../../lib/StoragePartialView";
+import {ContextMenu} from "../ContextMenu/ContextMenu";
+import {ContextMenuItem} from "../ContextMenu/ContextMenuItem";
 import {Popup} from "../Popup/Popup";
 import {CreateChildren} from "./Children";
 
@@ -26,6 +28,8 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
         }, []);
 
         const [editingNode, setEditingNode] = useState<HandleNode<Document>>();
+        const [contextMenuPosition, setContextMenuPosition] = useState<[number, number]>();
+        const hideContextMenu = () => setContextMenuPosition(undefined);
 
         const onNodeActivate = useCallback((node: CacheNode<Document>) => {
             if (node instanceof MissingNode) {
@@ -41,6 +45,15 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
             setEditingNode(undefined);
         }, [editingNode]);
 
+        const onContextMenu: MouseEventHandler<HTMLDivElement> = useCallback((event) => {
+            event.preventDefault();
+            setContextMenuPosition([event.clientX, event.clientY]);
+        }, [setContextMenuPosition]);
+
+        const onContextMenuDeactivate = useCallback(() => {
+            setContextMenuPosition(undefined);
+        }, [setContextMenuPosition])
+
         return (
             <div className={styles.CachedTreeView}>
                 {editingNode && <Popup onHide={() => setEditingNode(undefined)}>
@@ -48,7 +61,24 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
                     <DocumentEditorComponent document={editingNode.editingDocument} onEdited={onNodeEdited}/>
                 </Popup>}
 
-                <Children nodes={props.nodes} selectedNode={selectedNode} onNodeSelect={onNodeSelect} onNodeActivate={onNodeActivate}/>
+                {(contextMenuPosition && selectedNode) && <ContextMenu position={contextMenuPosition} onDeactivate={onContextMenuDeactivate}>
+                    {selectedNode instanceof MissingNode && <ContextMenuItem onClick={()=>{
+                        props.onDocumentRequest(selectedNode.handlePath.serialize());
+                        hideContextMenu();
+                    }}>
+                        Request document from the database
+                    </ContextMenuItem>}
+                    {selectedNode instanceof HandleNode && <ContextMenuItem onClick={() => {
+                        setEditingNode(selectedNode);
+                        hideContextMenu();
+                    }}>
+                        Edit document
+                    </ContextMenuItem>}
+                </ContextMenu>}
+
+                <div onContextMenu={onContextMenu}>
+                    <Children nodes={props.nodes} selectedNode={selectedNode} onNodeSelect={onNodeSelect} onNodeActivate={onNodeActivate}/>
+                </div>
             </div>
         );
     }

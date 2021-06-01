@@ -8,6 +8,7 @@ import {AppDocument} from "../AppDocument";
 import {InMemoryStorage} from "../lib/InMemoryStorage";
 import {defaults} from "../defaults";
 import {CreateCachedTreeView} from "./components/CachedTreeView/CachedTreeView";
+import {ContextMenu} from "./components/ContextMenu/ContextMenu";
 import {ThreeColLayout} from "./components/ThreeColLayout/ThreeColLayout";
 import {Document} from "./components/Document/Document";
 import {CreateDBTreeView} from './components/DBTreeView/DBTreeView';
