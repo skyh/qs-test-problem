@@ -76,7 +76,8 @@ export const App: FC = () => {
             <ThreeColLayout>
                 <Fragment>
                     <div className={styles.Hint}>
-                        Cache view. Double click on "Missing document" to request it from the database.
+                        Cache view. Double click on "Missing document" to pull document from the database. Double click
+                        on loaded document to edit it. See context menu for additional actions.
                     </div>
                     <CachedTreeView key={hack} nodes={cache.root.children} onDocumentRequest={onCacheDocumentRequest}/>
                 </Fragment>
