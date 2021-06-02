@@ -54,11 +54,12 @@ export const App: FC = () => {
         for (const change of changes) {
             const changedDocument = storage.queryDocument(change.handlePath);
             if (changedDocument) {
-                console.log("add changed document", change.handlePath, changedDocument)
                 cache.addHandle({
                     path: change.handlePath,
                     document: changedDocument,
                 });
+            } else {
+                cache.removeHandle(change.handlePath);
             }
         }
         setHack(x => x + 1);

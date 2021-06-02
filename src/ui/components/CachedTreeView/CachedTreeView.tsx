@@ -70,6 +70,10 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
                     node={selectedNode}
                     onDeactivate={onContextMenuDeactivate}
                     onNodeEdit={setEditingNode}
+                    onNodeDelete={(node) => {
+                        node.delete();
+                        setSelectedNode(undefined); // FIXME: this is a hack for missing observables
+                    }}
                     onDocumentRequest={onDocumentRequest}
                 />}
 

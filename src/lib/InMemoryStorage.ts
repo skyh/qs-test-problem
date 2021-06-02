@@ -87,7 +87,7 @@ export class InMemoryStorage<T> implements db.Storage<T> {
 
     public queryDocument(path: db.EncodedNodePath): null | T {
         const node = this.queryDocumentNode(Path.create(path));
-        if (!node) {
+        if (!node || node.deleted) {
             return null;
         }
         return node.document;
@@ -102,7 +102,14 @@ export class InMemoryStorage<T> implements db.Storage<T> {
     private applyChange(change: NodeChange<T>) {
         const node = this.queryDocumentNode(Path.create(change.handlePath));
         assert(node, "Attempt to apply change to missing node");
-        node.document = change.document;
+        switch (change.type) {
+            case "changed":
+                node.document = change.document;
+                break;
+            case "deleted":
+                node.deleted = true;
+                break;
+        }
     }
 
     private queryDocumentNode(path: db.NodePath): null | InMemoryDocumentNode<T> {

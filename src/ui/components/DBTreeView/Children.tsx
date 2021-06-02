@@ -21,13 +21,23 @@ export const CreateChildren = <Document extends any>(hocProps: HOCProps<Document
 
         return (
             <ul className={styles.Children}>
-                {nodes.map(node => (
-                    <li key={node.key}>
-                        <Row node={node} selected={props.selectedNode === node} onSelect={props.onNodeSelect} onActivate={props.onNodeActivate}/>
-                        {node.children.length > 0 &&
-                            <Children nodes={node.children} selectedNode={props.selectedNode} onNodeSelect={props.onNodeSelect} onNodeActivate={props.onNodeActivate}/>
-                        }
-                    </li>))}
+                {nodes.map(node => {
+                    if (node.deleted) {
+                        return null;
+                    }
+
+                    return (
+                        <li key={node.key}>
+                            <Row node={node} selected={props.selectedNode === node} onSelect={props.onNodeSelect} onActivate={props.onNodeActivate}/>
+                            {node.children.length > 0 &&
+                                <Children nodes={node.children} selectedNode={props.selectedNode}
+                                    onNodeSelect={props.onNodeSelect}
+                                    onNodeActivate={props.onNodeActivate}
+                                />
+                            }
+                        </li>
+                    );
+                })}
             </ul>
         );
     };

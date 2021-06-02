@@ -24,6 +24,12 @@ export class Node<T> {
         return this.pushNode(new MissingNode(this, handlePath));
     }
 
+    public removeChild(node: CacheNode<T>): void {
+        assert(node.parent === this);
+        this.children.splice(node.key, 1);
+        this.refreshChildrenKeys();
+    }
+
     private pushNode(node: HandleNode<T>): typeof node
     private pushNode(node: MissingNode<T>): typeof node
     private pushNode(node: CacheNode<T>): typeof node {
@@ -68,6 +74,7 @@ export class HandleNode<Document> extends Node<Document> implements NodeWithHand
     public static readonly EmptyDocument = undefined; // TODO: in theory, undefined could also be a valid document
 
     public key: db.NodeKey = -1;
+    public deleted = false;
 
     public constructor(
         public readonly parent: Node<Document>,
@@ -83,14 +90,22 @@ export class HandleNode<Document> extends Node<Document> implements NodeWithHand
     }
 
     get changed() {
-        return this.editedDocument !== HandleNode.EmptyDocument;
+        return this.deleted || this.editedDocument !== HandleNode.EmptyDocument;
     }
 
     public getChanges(): undefined | NodeChange<Document> {
         if (!this.changed) return;
 
+        if (this.deleted) {
+            return {
+                handlePath: this.handle.path,
+                type: "deleted",
+            };
+        }
+
         return {
             handlePath: this.handle.path,
+            type: "changed",
             document: this.editingDocument,
         };
     }
@@ -108,6 +123,10 @@ export class HandleNode<Document> extends Node<Document> implements NodeWithHand
 
     public setEditedDocument(document: Document) {
         this.editedDocument = document;
+    }
+
+    public delete() {
+        this.deleted = true;
     }
 }
 
@@ -147,6 +166,23 @@ export class StoragePartialView<T> {
         const node = parentNode.appendHandle(handle);
         this.setNodeWithHandlePath(handlePath, node);
         return node;
+    }
+
+    public removeHandle(encoded: db.EncodedNodePath): void {
+        const path = Path.create(encoded);
+        const node = this.getNodeWithHandlePath(path);
+        assert(isCacheNode<T>(node), "Can't remove node");
+        this.removeNodeAndAllMissingParents(node);
+    }
+
+    private removeNodeAndAllMissingParents(node: CacheNode<T>): void {
+        const parent = node.parent;
+        this.delNodeWithHandlePath(node.handlePath);
+        if (parent instanceof MissingNode && parent.children.length === 1) {
+            this.removeNodeAndAllMissingParents(parent);
+        } else {
+            node.parent.removeChild(node);
+        }
     }
 
     public queryDocument(path: db.EncodedNodePath): undefined | T {
@@ -198,6 +234,10 @@ export class StoragePartialView<T> {
 
     private setNodeWithHandlePath(path: db.NodePath, node: CacheNode<T>): void {
         this.nodesCacheByHandlePath.set(path.serialize(), node);
+    }
+
+    private delNodeWithHandlePath(path: db.NodePath): void {
+        this.nodesCacheByHandlePath.delete(path.serialize());
     }
 
     private getOrCreateParentNodeForPath(path: db.NodePath): Node<T> {

@@ -6,13 +6,16 @@ const PATH_SEPARATOR = "/";
 
 export class Path implements db.NodePath {
     public static create(): Path
+    public static create(path: Path): Path
     public static create(serialized: db.EncodedNodePath): Path
     public static create(parts: db.NodeKey[]): Path
-    public static create(input?: db.EncodedNodePath | db.NodeKey[]): Path {
+    public static create(input?: Path | db.EncodedNodePath | db.NodeKey[]): Path {
         if (input === undefined) {
             return new this([]);
         } else if (Array.isArray(input)) {
             return new this(input.slice());
+        } else if (input instanceof Path) {
+            return Path.create(input.keys);
         } else {
             return new this(this.decode(input));
         }

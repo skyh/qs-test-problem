@@ -86,6 +86,30 @@ describe("StoragePartialView", () => {
         });
     });
 
+    describe("removeHandle", () => {
+        it("should remove node and all it's empty missing parents", () => {
+            const handles = [{
+                path: "/0/0/0",
+                document: "document at /0/0/0",
+            }, {
+                path: "/0/0/1",
+                document: "document at /0/0/1",
+            }];
+
+            for (const handle of handles) {
+                storage.addHandle(handle);
+            }
+
+            storage.removeHandle("/0/0/0");
+            storage.removeHandle("/0/0/1");
+
+            expect(storage.queryDocument("/0/0/0")).toEqual(undefined);
+            expect(storage.queryDocument("/0/0/1")).toEqual(undefined);
+            expect(storage.root.children.length).toEqual(0);
+        });
+
+    });
+
     describe("getChanges", () => {
         it("should return empty array if no changes were made", () => {
             const handles = [{
@@ -118,8 +142,8 @@ describe("StoragePartialView", () => {
             node1.setEditedDocument("edited document at /0/0/1");
 
             expect(storage.getChanges()).toEqual([
-                {handlePath: "/0/0/0", document: "edited document at /0/0/0"},
-                {handlePath: "/0/0/1", document: "edited document at /0/0/1"},
+                {handlePath: "/0/0/0", type: "changed", document: "edited document at /0/0/0"},
+                {handlePath: "/0/0/1", type: "changed", document: "edited document at /0/0/1"},
             ]);
         });
     });

@@ -2,5 +2,12 @@ import {db} from "./db/db";
 
 export type NodeChange<T> = {
     handlePath: db.EncodedNodePath
-    document: T
-}
+} & (
+    | {
+        type: "changed"
+        document: T
+    }
+    | {
+        type: "deleted"
+    }
+)

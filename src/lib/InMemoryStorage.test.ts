@@ -56,6 +56,7 @@ describe("InMemoryStorage", () => {
 
             storage.applyChanges([{
                 handlePath: "/0",
+                type: "changed",
                 document: "new document at /0",
             }]);
 
