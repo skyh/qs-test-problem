@@ -23,18 +23,26 @@ export const CreateHandleNodeRow = <Document extends any>(hocProps: HOCProps<Doc
         }, [props]);
 
         const className = useMemo(() => {
+            const {node, selected} = props
             return clsx(styles.Row, {
-                [styles.selected]: props.selected,
-                [styles.changed]: props.node.changed,
+                [styles.selected]: selected,
+                [styles.edited]: node.edited && !node.deleted,
+                [styles.deleted]: node.deleted,
             });
         }, [props]);
 
         const {node} = props;
-        const title = node.changed ? "Document was changed" : undefined;
+
+        let title;
+        if (node.deleted) {
+            title = "Document was deleted";
+        } else if (node.edited) {
+            title =  "Document was edited";
+        }
 
         return (
             <div className={className} onMouseDown={onMouseDown} onDoubleClick={onDoubleClick} title={title}>
-                <DocumentComponent document={node.editingDocument}/>
+                <DocumentComponent document={node.deleted ? node.handle.document : node.editingDocument}/>
             </div>
         );
     };

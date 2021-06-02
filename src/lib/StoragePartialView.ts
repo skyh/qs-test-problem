@@ -89,8 +89,12 @@ export class HandleNode<Document> extends Node<Document> implements NodeWithHand
         return Path.create(this.handle.path);
     }
 
-    get changed() {
-        return this.deleted || this.editedDocument !== HandleNode.EmptyDocument;
+    get edited(): boolean {
+        return this.editedDocument !== HandleNode.EmptyDocument
+    }
+
+    get changed(): boolean {
+        return this.deleted || this.edited;
     }
 
     public getChanges(): undefined | NodeChange<Document> {
@@ -127,6 +131,11 @@ export class HandleNode<Document> extends Node<Document> implements NodeWithHand
 
     public delete() {
         this.deleted = true;
+    }
+
+    public discardChanges() {
+        this.deleted = false;
+        this.resetEditedDocument();
     }
 }
 

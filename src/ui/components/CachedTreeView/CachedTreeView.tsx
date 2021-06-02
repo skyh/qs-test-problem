@@ -58,6 +58,11 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
             setContextMenuPosition(undefined);
         }, [setContextMenuPosition])
 
+        // FIXME: this is a hack for missing observables
+        const forceRerenderHack = () => {
+            setSelectedNode(undefined);
+        }
+
         return (
             <div className={styles.CachedTreeView}>
                 {editingNode && <Popup onHide={() => setEditingNode(undefined)}>
@@ -72,7 +77,15 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
                     onNodeEdit={setEditingNode}
                     onNodeDelete={(node) => {
                         node.delete();
-                        setSelectedNode(undefined); // FIXME: this is a hack for missing observables
+                        forceRerenderHack();
+                    }}
+                    onNodeDiscardEdit={(node) => {
+                        node.resetEditedDocument();
+                        forceRerenderHack();
+                    }}
+                    onNodeUndelete={(node) => {
+                        node.deleted = false;
+                        forceRerenderHack();
                     }}
                     onDocumentRequest={onDocumentRequest}
                 />}
