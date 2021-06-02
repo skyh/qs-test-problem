@@ -1,7 +1,7 @@
 import React, {FC} from "react";
 
 import {HOCProps} from "./HOCProps";
-import {CacheNode} from "../../../lib/StoragePartialView";
+import {CacheNode, HandleNode} from "../../../lib/StoragePartialView";
 import {CreateRow} from "./Row";
 
 import styles from "./Children.module.sass";
@@ -23,7 +23,9 @@ export const CreateChildren = <T extends any>(hocProps: HOCProps<T>) => {
                     return (
                         <li key={node.key}>
                             <Row node={node} selected={node === props.selectedNode} onSelect={props.onNodeSelect} onActivate={props.onNodeActivate}/>
-                            <Children selectedNode={props.selectedNode} nodes={node.children} onNodeSelect={props.onNodeSelect} onNodeActivate={props.onNodeActivate}/>
+                            {node instanceof HandleNode && node.deleted ? null :
+                                <Children selectedNode={props.selectedNode} nodes={node.children}
+                                          onNodeSelect={props.onNodeSelect} onNodeActivate={props.onNodeActivate}/>}
                         </li>
                     );
                 })}
