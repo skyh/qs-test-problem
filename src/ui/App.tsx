@@ -22,15 +22,23 @@ const CachedTreeView = CreateCachedTreeView({
     DocumentEditorComponent: DocumentEditor,
 });
 
+function createDefaultStorage() {
+    return InMemoryStorage.create<AppDocument>(defaults);
+}
+
+function createEmptyCache() {
+    return StoragePartialView.create<AppDocument>();
+}
+
 export const App: FC = () => {
-    const [storage, setStorage] = useState(InMemoryStorage.create<AppDocument>());
-    const [cache, setCache] = useState(StoragePartialView.create<AppDocument>());
+    const [storage, setStorage] = useState(createDefaultStorage());
+    const [cache, setCache] = useState(createEmptyCache());
 
     const [hack, setHack] = useState(0); // FIXME: use observables for auto re-render
 
     const onResetClick = useCallback(() => {
-        setStorage(InMemoryStorage.create<AppDocument>(defaults));
-        setCache(StoragePartialView.create<AppDocument>());
+        setStorage(createDefaultStorage());
+        setCache(createEmptyCache());
     }, [setStorage, setCache]);
 
     const onDocumentActivated = useCallback((handle: db.DocumentHandle<AppDocument>) => {
