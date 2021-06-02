@@ -3,9 +3,10 @@ import {BodyPortal} from "../BodyPortal/BodyPortal";
 
 import styles from "./ContextMenu.module.sass";
 import {ContextMenuContent} from "./ContextMenuContent";
+import {ContextMenuPosition} from "./ContextMenuPosition";
 
 interface Props {
-    position: [number, number]
+    position: ContextMenuPosition
     onDeactivate: () => void
 }
 

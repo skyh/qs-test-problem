@@ -1,8 +1,6 @@
 import React, {FC, MouseEventHandler, useCallback, useState} from "react";
 
 import {CacheNode, HandleNode, MissingNode} from "../../../lib/StoragePartialView";
-import {ContextMenu} from "../ContextMenu/ContextMenu";
-import {ContextMenuItem} from "../ContextMenu/ContextMenuItem";
 import {Popup} from "../Popup/Popup";
 import {CreateChildren} from "./Children";
 
@@ -10,6 +8,7 @@ import {HOCProps} from "./HOCProps";
 import styles from "./CachedTreeView.module.sass";
 import { db } from "../../../lib/db/db";
 import { assert } from "../../../lib/assert";
+import {CreateNodeContextMenu} from "./NodeContextMenu";
 
 interface Props<Document> {
     nodes: Array<CacheNode<Document>>
@@ -18,6 +17,8 @@ interface Props<Document> {
 
 export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Document>) => {
     const Children = CreateChildren(hocProps);
+    const NodeContextMenu = CreateNodeContextMenu(hocProps);
+
     const {DocumentEditorComponent} = hocProps;
 
     const CachedTreeView: FC<Props<Document>> = (props) => {
@@ -29,15 +30,18 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
 
         const [editingNode, setEditingNode] = useState<HandleNode<Document>>();
         const [contextMenuPosition, setContextMenuPosition] = useState<[number, number]>();
-        const hideContextMenu = () => setContextMenuPosition(undefined);
+
+        const onDocumentRequest = useCallback((node: CacheNode<Document>) => {
+            props.onDocumentRequest(node.handlePath.serialize());
+        }, [props]);
 
         const onNodeActivate = useCallback((node: CacheNode<Document>) => {
             if (node instanceof MissingNode) {
-                props.onDocumentRequest(node.handlePath.serialize());
+                onDocumentRequest(node);
             } else if (node instanceof HandleNode) {
                 setEditingNode(node);
             }
-        }, [props]);
+        }, [onDocumentRequest]);
 
         const onNodeEdited = useCallback((document: Document) => {
             assert(editingNode);
@@ -61,20 +65,13 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
                     <DocumentEditorComponent document={editingNode.editingDocument} onEdited={onNodeEdited}/>
                 </Popup>}
 
-                {(contextMenuPosition && selectedNode) && <ContextMenu position={contextMenuPosition} onDeactivate={onContextMenuDeactivate}>
-                    {selectedNode instanceof MissingNode && <ContextMenuItem onClick={()=>{
-                        props.onDocumentRequest(selectedNode.handlePath.serialize());
-                        hideContextMenu();
-                    }}>
-                        Request document from the database
-                    </ContextMenuItem>}
-                    {selectedNode instanceof HandleNode && <ContextMenuItem onClick={() => {
-                        setEditingNode(selectedNode);
-                        hideContextMenu();
-                    }}>
-                        Edit document
-                    </ContextMenuItem>}
-                </ContextMenu>}
+                {(contextMenuPosition && selectedNode) && <NodeContextMenu
+                    position={contextMenuPosition}
+                    node={selectedNode}
+                    onDeactivate={onContextMenuDeactivate}
+                    onNodeEdit={setEditingNode}
+                    onDocumentRequest={onDocumentRequest}
+                />}
 
                 <div onContextMenu={onContextMenu}>
                     <Children nodes={props.nodes} selectedNode={selectedNode} onNodeSelect={onNodeSelect} onNodeActivate={onNodeActivate}/>

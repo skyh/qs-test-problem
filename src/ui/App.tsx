@@ -8,7 +8,6 @@ import {AppDocument} from "../AppDocument";
 import {InMemoryStorage} from "../lib/InMemoryStorage";
 import {defaults} from "../defaults";
 import {CreateCachedTreeView} from "./components/CachedTreeView/CachedTreeView";
-import {ContextMenu} from "./components/ContextMenu/ContextMenu";
 import {ThreeColLayout} from "./components/ThreeColLayout/ThreeColLayout";
 import {Document} from "./components/Document/Document";
 import {CreateDBTreeView} from './components/DBTreeView/DBTreeView';
@@ -26,11 +25,6 @@ const CachedTreeView = CreateCachedTreeView({
 export const App: FC = () => {
     const [storage, setStorage] = useState(InMemoryStorage.create<AppDocument>());
     const [cache, setCache] = useState(StoragePartialView.create<AppDocument>());
-    const resetCache = useCallback(() => {
-        const newCache = StoragePartialView.create<AppDocument>();
-        setCache(newCache);
-        return newCache;
-    }, [setCache]);
 
     const [hack, setHack] = useState(0); // FIXME: use observables for auto re-render
 
