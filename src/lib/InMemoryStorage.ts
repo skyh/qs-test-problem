@@ -3,6 +3,10 @@ import {db} from "./db/db";
 import {Path} from "./db/Path";
 import {NodeChange} from "./NodeChange";
 
+interface ApplyChangesResult {
+    affected: db.EncodedNodePath[],
+}
+
 export class InMemoryNode<T> implements db.RootNode<T> {
     public children: InMemoryDocumentNode<T>[] = [];
 
@@ -72,13 +76,20 @@ export class InMemoryStorage<T> implements db.Storage<T> {
         return new InMemoryStorage(root);
     }
 
-    private static applySnapshot<T>(parent: InMemoryNode<T>, snapshots: InMemoryStorageSnapshot<T>[]) {
+    private static applySnapshot<T>(parent: InMemoryNode<T>, snapshots: InMemoryStorageSnapshot<T>[]): ApplyChangesResult {
+        const result: ApplyChangesResult = {affected: []};
+
         for (const sn of snapshots) {
             const node = parent.appendDocument(sn.document);
+            result.affected.push(node.path.serialize());
+
             if (sn.children) {
-                this.applySnapshot(node, sn.children);
+                const {affected} = this.applySnapshot(node, sn.children);
+                result.affected.push(...affected);
             }
         }
+
+        return result;
     }
 
     constructor(
@@ -93,29 +104,49 @@ export class InMemoryStorage<T> implements db.Storage<T> {
         return node.document;
     }
 
-    public applyChanges(changes: Array<NodeChange<T>>) {
+    public applyChanges(changes: Array<NodeChange<T>>): ApplyChangesResult {
+        const result: ApplyChangesResult = {
+            affected: [],
+        };
+
         for (const change of changes) {
-            this.applyChange(change);
+            const {affected} = this.applyChange(change);
+            result.affected.push(...affected);
         }
+
+        return result;
     }
 
-    private applyChange(change: NodeChange<T>) {
+    private applyChange(change: NodeChange<T>): ApplyChangesResult {
         const node = this.queryDocumentNode(Path.create(change.handlePath));
         assert(node, "Attempt to apply change to missing node");
+
+        const result: ApplyChangesResult = {
+            affected: [],
+        };
+
         // FIXME: get rid of switch
         switch (change.type) {
             case "changed":
                 if ("document" in change) {
                     node.document = change.document;
+                    result.affected.push(change.handlePath);
                 }
+
                 if ("added" in change) {
-                    InMemoryStorage.applySnapshot(node, change.added); //TODO: make NodeChange.added = InMemoryStorageSnapshot
+                    //TODO: make NodeChange.added = InMemoryStorageSnapshot
+                    const {affected} = InMemoryStorage.applySnapshot(node, change.added);
+                    result.affected.push(...affected);
                 }
                 break;
+
             case "deleted":
                 node.deleted = true;
+                result.affected.push(change.handlePath);
                 break;
         }
+
+        return result;
     }
 
     private queryDocumentNode(path: db.NodePath): null | InMemoryDocumentNode<T> {

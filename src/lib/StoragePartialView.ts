@@ -153,6 +153,7 @@ export class HandleNode<Document> extends Node<Document> implements NodeWithHand
     public discardChanges() {
         this.deleted = false;
         this.resetEditedDocument();
+        this.addedChildren = [];
     }
 
     public addSubdocument(document: Document): AddedNode<Document> {
@@ -268,6 +269,14 @@ export class StoragePartialView<T> {
     // FIXME: Move this to node itself?
     public getChanges(): Array<NodeChange<T>> {
         return Array.from(this.iterateChanges());
+    }
+
+    public discardChanges(): void {
+        for (const node of this.iterateDFS()) {
+            if (node instanceof HandleNode) {
+                node.discardChanges();
+            }
+        }
     }
 
     public *iterateChanges(): IterableIterator<NodeChange<T>> {

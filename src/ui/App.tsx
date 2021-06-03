@@ -62,26 +62,22 @@ export const App: FC = () => {
 
     const onApplyChangesClick = useCallback(() => {
         const changes = cache.getChanges();
-        storage.applyChanges(changes);
+        cache.discardChanges();
 
-        for (const change of changes) {
-            // FIXME: get rid of ifs
-            if (change.type === "changed") {
-                const changedDocument = storage.queryDocument(change.handlePath);
-                assert(changedDocument);
+        const {affected} = storage.applyChanges(changes);
 
+        for (const path of affected) {
+            const changedDocument = storage.queryDocument(path);
+            if (changedDocument) {
                 cache.addHandle({
-                    path: change.handlePath,
+                    path,
                     document: changedDocument,
                 });
-
-                if ("added" in change) {
-                    console.log("TODO: sync added documents");
-                }
-            } else if (change.type === "deleted") {
-                cache.removeHandle(change.handlePath);
+            } else {
+                cache.removeHandle(path);
             }
         }
+
         setHack(x => x + 1);
     }, [storage, cache, setHack]);
 
