@@ -1,12 +1,12 @@
 import clsx from "clsx";
 import React, {FC, useCallback, useMemo} from "react";
 
-import {HandleNode} from "../../../lib/StoragePartialView";
+import {HandleNode} from "../../../../lib/StoragePartialView";
 
-import {HOCProps} from "./HOCProps";
-import {RowProps} from "./RowProps";
+import {HOCProps} from "../HOCProps";
+import {RowProps} from "../RowProps";
 
-import styles from "./Row.module.sass";
+import styles from "./HandleNodeRow.module.sass";
 
 type Props<Document> = RowProps<HandleNode<Document>>
 

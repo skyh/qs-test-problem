@@ -1,5 +1,5 @@
 import React, {FC, Fragment} from "react";
-import {CacheNode, HandleNode, MissingNode} from "../../../lib/StoragePartialView";
+import {AddedNode, CacheNode, HandleNode, MissingNode} from "../../../lib/StoragePartialView";
 import {ContextMenu} from "../ContextMenu/ContextMenu";
 import {ContextMenuItem} from "../ContextMenu/ContextMenuItem";
 
@@ -11,15 +11,17 @@ interface Props<Document> {
     node: CacheNode<Document>
     onDeactivate: () => void
     onNodeEdit: (node: HandleNode<Document>) => void
-    onNodeDelete: (node: HandleNode<Document>) => void
+    onNodeDelete: (node: HandleNode<Document> | AddedNode<Document>) => void
     onNodeDiscardEdit: (node: HandleNode<Document>) => void
     onNodeUndelete: (node: HandleNode<Document>) => void
+    onNodeAddSubdocument: (node: HandleNode<Document> | AddedNode<Document>) => void
+    onNodeDiscardSubdocuments: (node: HandleNode<Document> | AddedNode<Document>) => void
     onDocumentRequest: (node: CacheNode<Document>) => void
 }
 
 export const CreateNodeContextMenu = <T extends any>(hocProps: HOCProps<T>) => {
     const NodeContextMenu: FC<Props<T>> = (props) => {
-        const {position, node, onDeactivate, onNodeEdit, onDocumentRequest, onNodeDelete, onNodeUndelete, onNodeDiscardEdit} = props
+        const {position, node, onDeactivate, onNodeEdit, onNodeDiscardSubdocuments, onDocumentRequest, onNodeDelete, onNodeUndelete, onNodeDiscardEdit, onNodeAddSubdocument} = props
         return (
             <ContextMenu position={position} onDeactivate={onDeactivate}>
                 {node instanceof MissingNode && <ContextMenuItem onClick={()=>{
@@ -41,13 +43,25 @@ export const CreateNodeContextMenu = <T extends any>(hocProps: HOCProps<T>) => {
                             onNodeEdit(node);
                             onDeactivate();
                         }}>
-                            Edit
+                            Edit...
+                        </ContextMenuItem>
+                        <ContextMenuItem onClick={() => {
+                            onNodeAddSubdocument(node);
+                            onDeactivate();
+                        }}>
+                            Add subdocument...
                         </ContextMenuItem>
                         {node.edited && <ContextMenuItem onClick={() => {
                             onNodeDiscardEdit(node);
                             onDeactivate();
                         }}>
-                            Discard changes
+                            Discard edit
+                        </ContextMenuItem>}
+                        {node.childrenAdded && <ContextMenuItem onClick={() => {
+                            onNodeDiscardSubdocuments(node);
+                            onDeactivate();
+                        }}>
+                            Clear added subdocuments
                         </ContextMenuItem>}
                         <ContextMenuItem onClick={() => {
                             onNodeDelete(node);
@@ -56,6 +70,20 @@ export const CreateNodeContextMenu = <T extends any>(hocProps: HOCProps<T>) => {
                             Delete
                         </ContextMenuItem>
                     </Fragment>}
+                </Fragment>}
+                {node instanceof AddedNode && <Fragment>
+                    <ContextMenuItem onClick={() => {
+                        onNodeAddSubdocument(node);
+                        onDeactivate();
+                    }}>
+                        Add subdocument
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={() => {
+                        onNodeDelete(node);
+                        onDeactivate();
+                    }}>
+                        Delete
+                    </ContextMenuItem>
                 </Fragment>}
             </ContextMenu>
         );

@@ -1,6 +1,6 @@
 import React, {FC, MouseEventHandler, useCallback, useState} from "react";
 
-import {CacheNode, HandleNode, MissingNode} from "../../../lib/StoragePartialView";
+import {Node, CacheNode, HandleNode, MissingNode, AddedNode} from "../../../lib/StoragePartialView";
 import {Popup} from "../Popup/Popup";
 import {CreateChildren} from "./Children";
 
@@ -11,7 +11,7 @@ import { assert } from "../../../lib/assert";
 import {CreateNodeContextMenu} from "./NodeContextMenu";
 
 interface Props<Document> {
-    nodes: Array<CacheNode<Document>>
+    node: AddedNode<Document> | CacheNode<Document> | Node<Document>
     onDocumentRequest(path: db.EncodedNodePath): void
 }
 
@@ -19,7 +19,7 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
     const Children = CreateChildren(hocProps);
     const NodeContextMenu = CreateNodeContextMenu(hocProps);
 
-    const {DocumentEditorComponent} = hocProps;
+    const {DocumentEditorComponent, documentFactory} = hocProps;
 
     const CachedTreeView: FC<Props<Document>> = (props) => {
         const [selectedNode, setSelectedNode] = useState<CacheNode<Document>>();
@@ -28,17 +28,22 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
             setSelectedNode(node);
         }, []);
 
-        const [editingNode, setEditingNode] = useState<HandleNode<Document>>();
+        const [editingNode, setEditingNode] = useState<AddedNode<Document> | HandleNode<Document>>();
+        const [addingSubdocumentNode, setAddingSubdocumentNode] = useState<AddedNode<Document> | HandleNode<Document>>();
         const [contextMenuPosition, setContextMenuPosition] = useState<[number, number]>();
 
         const onDocumentRequest = useCallback((node: CacheNode<Document>) => {
             props.onDocumentRequest(node.handlePath.serialize());
         }, [props]);
 
-        const onNodeActivate = useCallback((node: CacheNode<Document>) => {
+        const onNodeActivate = useCallback((node: AddedNode<Document> | CacheNode<Document>) => {
             if (node instanceof MissingNode) {
                 onDocumentRequest(node);
             } else if (node instanceof HandleNode) {
+                if (!node.deleted) {
+                    setEditingNode(node);
+                }
+            } else if (node instanceof AddedNode) {
                 setEditingNode(node);
             }
         }, [onDocumentRequest]);
@@ -70,6 +75,14 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
                     <DocumentEditorComponent document={editingNode.editingDocument} onEdited={onNodeEdited}/>
                 </Popup>}
 
+                {addingSubdocumentNode && <Popup onHide={() => setAddingSubdocumentNode(undefined)}>
+                    <div className={styles.EditorHeader}>Create subdocument</div>
+                    <DocumentEditorComponent document={documentFactory.create()} onEdited={(document) => {
+                        addingSubdocumentNode.addSubdocument(document);
+                        setAddingSubdocumentNode(undefined);
+                    }}/>
+                </Popup>}
+
                 {(contextMenuPosition && selectedNode) && <NodeContextMenu
                     position={contextMenuPosition}
                     node={selectedNode}
@@ -88,10 +101,17 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
                         forceRerenderHack();
                     }}
                     onDocumentRequest={onDocumentRequest}
+                    onNodeAddSubdocument={(node) => {
+                        setAddingSubdocumentNode(node);
+                    }}
+                    onNodeDiscardSubdocuments={(node) => {
+                        node.addedChildren = [];
+                        forceRerenderHack();
+                    }}
                 />}
 
                 <div onContextMenu={onContextMenu}>
-                    <Children nodes={props.nodes} selectedNode={selectedNode} onNodeSelect={onNodeSelect} onNodeActivate={onNodeActivate}/>
+                    <Children node={props.node as any} selectedNode={selectedNode} onNodeSelect={onNodeSelect} onNodeActivate={onNodeActivate as any}/>
                 </div>
             </div>
         );

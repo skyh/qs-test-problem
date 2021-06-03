@@ -1,7 +1,7 @@
 import {assert} from "./assert";
 import {db} from "./db/db";
 import {Path} from "./db/Path";
-import {NodeChange} from "./NodeChange";
+import {AddedChange, NodeChange} from "./NodeChange";
 
 interface NodeWithHandle {
     handlePath: db.NodePath
@@ -75,6 +75,7 @@ export class HandleNode<Document> extends Node<Document> implements NodeWithHand
 
     public key: db.NodeKey = -1;
     public deleted = false;
+    public addedChildren: AddedNode<Document>[] = [];
 
     public constructor(
         public readonly parent: Node<Document>,
@@ -93,8 +94,12 @@ export class HandleNode<Document> extends Node<Document> implements NodeWithHand
         return this.editedDocument !== HandleNode.EmptyDocument
     }
 
+    get childrenAdded(): boolean {
+        return this.addedChildren.length > 0;
+    }
+
     get changed(): boolean {
-        return this.deleted || this.edited;
+        return this.deleted || this.edited || this.childrenAdded;
     }
 
     public getChanges(): undefined | NodeChange<Document> {
@@ -107,11 +112,23 @@ export class HandleNode<Document> extends Node<Document> implements NodeWithHand
             };
         }
 
-        return {
-            handlePath: this.handle.path,
-            type: "changed",
-            document: this.editingDocument,
-        };
+        if (this.edited) {
+            return {
+                handlePath: this.handle.path,
+                type: "changed",
+                document: this.editingDocument,
+            };
+        }
+
+        if (this.addedChildren.length > 0) {
+            return {
+                handlePath: this.handle.path,
+                type: "changed",
+                added: this.addedChildren.map(added => {
+                    return added.getChanges();
+                }),
+            };
+        }
     }
 
     public get editingDocument(): Document {
@@ -136,6 +153,53 @@ export class HandleNode<Document> extends Node<Document> implements NodeWithHand
     public discardChanges() {
         this.deleted = false;
         this.resetEditedDocument();
+    }
+
+    public addSubdocument(document: Document): AddedNode<Document> {
+        const node = new AddedNode(this, document);
+        this.addedChildren.push(node);
+        return node;
+    }
+}
+
+export class AddedNode<Document> extends Node<Document> {
+    public addedChildren: Array<AddedNode<Document>> = [];
+
+    constructor(
+        public parent: HandleNode<Document> | AddedNode<Document>,
+        public document: Document,
+    ) {
+        super();
+    }
+
+    public addSubdocument(document: Document): AddedNode<Document> {
+        const node = new AddedNode(this, document);
+        this.addedChildren.push(node);
+        return node;
+    }
+
+    public delete() {
+        const {addedChildren} = this.parent;
+        const index = addedChildren.findIndex(child => child === this);
+        assert(index !== -1)
+        addedChildren.splice(index, 1);
+    }
+
+    public setEditedDocument(document: Document) {
+        this.document = document;
+    }
+
+    public get editingDocument(): Document {
+        return this.document;
+    }
+
+    public getChanges(): AddedChange<Document> {
+        const {document, addedChildren} = this;
+        const result: AddedChange<Document> = {document};
+        if (addedChildren.length > 0) {
+            result.children = addedChildren.map(child => child.getChanges());
+        }
+        return result;
     }
 }
 
@@ -298,7 +362,7 @@ export class StoragePartialView<T> {
     }
 }
 
-function isCacheNode<T>(node: any): node is CacheNode<T> {
+export function isCacheNode<T>(node: any): node is CacheNode<T> {
     return node instanceof HandleNode || node instanceof MissingNode;
 }
 

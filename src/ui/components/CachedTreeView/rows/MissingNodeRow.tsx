@@ -1,10 +1,10 @@
 import clsx from "clsx";
 import React, {FC, useCallback, useMemo} from "react";
 
-import {MissingNode} from "../../../lib/StoragePartialView";
+import {MissingNode} from "../../../../lib/StoragePartialView";
 
-import {HOCProps} from "./HOCProps";
-import {RowProps} from "./RowProps";
+import {HOCProps} from "../HOCProps";
+import {RowProps} from "../RowProps";
 import styles from "./MissingNodeRow.module.sass";
 
 type Props<Document> = RowProps<MissingNode<Document>>
@@ -21,7 +21,7 @@ export const CreateMissingNodeRow = <Document extends any>(hocProps: HOCProps<Do
 
         const className = useMemo(() => {
             return clsx({
-                [styles.MissingNodeRow]: true,
+                [styles.Row]: true,
                 [styles.selected]: props.selected,
             });
         }, [props]);

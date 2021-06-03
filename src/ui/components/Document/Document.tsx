@@ -8,6 +8,6 @@ interface Props {
 
 export const Document: FC<Props> = (props) => (
     <div>
-        {props.document}
+        {props.document || <small>(empty document)</small>}
     </div>
 );

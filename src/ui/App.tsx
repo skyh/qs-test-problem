@@ -20,6 +20,11 @@ const DBTreeView = CreateDBTreeView({
 const CachedTreeView = CreateCachedTreeView({
     DocumentComponent: Document,
     DocumentEditorComponent: DocumentEditor,
+    documentFactory: {
+        create(): AppDocument {
+            return "";
+        },
+    },
 });
 
 function createDefaultStorage() {
@@ -60,13 +65,20 @@ export const App: FC = () => {
         storage.applyChanges(changes);
 
         for (const change of changes) {
-            const changedDocument = storage.queryDocument(change.handlePath);
-            if (changedDocument) {
+            // FIXME: get rid of ifs
+            if (change.type === "changed") {
+                const changedDocument = storage.queryDocument(change.handlePath);
+                assert(changedDocument);
+
                 cache.addHandle({
                     path: change.handlePath,
                     document: changedDocument,
                 });
-            } else {
+
+                if ("added" in change) {
+                    console.log("TODO: sync added documents");
+                }
+            } else if (change.type === "deleted") {
                 cache.removeHandle(change.handlePath);
             }
         }
@@ -87,7 +99,7 @@ export const App: FC = () => {
                         Cache view. Double click on "Missing document" to pull document from the database. Double click
                         on loaded document to edit it. See context menu for additional actions.
                     </div>
-                    <CachedTreeView key={hack} nodes={cache.root.children} onDocumentRequest={onCacheDocumentRequest}/>
+                    <CachedTreeView key={hack} node={cache.root} onDocumentRequest={onCacheDocumentRequest}/>
                 </Fragment>
                 <Fragment>
                     <div className={styles.Hint}>

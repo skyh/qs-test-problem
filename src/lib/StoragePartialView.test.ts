@@ -1,4 +1,4 @@
-import {MissingNode, StoragePartialView} from "./StoragePartialView";
+import {Node, HandleNode, MissingNode, StoragePartialView, AddedNode} from "./StoragePartialView";
 
 type TestDocument = string;
 
@@ -145,6 +145,74 @@ describe("StoragePartialView", () => {
                 {handlePath: "/0/0/0", type: "changed", document: "edited document at /0/0/0"},
                 {handlePath: "/0/0/1", type: "changed", document: "edited document at /0/0/1"},
             ]);
+        });
+
+        it("should return added nodes", () => {
+        });
+    });
+});
+
+describe("HandleNode", () => {
+    describe("addSubdocument", () => {
+        it("should return AddedNode instance", () => {
+            const root = new Node<string>();
+            const node = new HandleNode(root, {
+                path: "/0",
+                document: "Node document"
+            });
+            const addedNode = node.addSubdocument("Added document");
+            expect(addedNode).toBeInstanceOf(AddedNode);
+        });
+
+        it("should store node into addedChildren", () => {
+            const root = new Node<string>();
+            const node = new HandleNode(root, {
+                path: "/0",
+                document: "Node document"
+            });
+            const addedNode = node.addSubdocument("Added document");
+            expect(node.addedChildren).toEqual([addedNode]);
+        });
+    });
+
+    describe("getChanges", () => {
+        it("should return changes", () => {
+            const root = new Node<string>();
+            const node = new HandleNode(root, {
+                path: "/0",
+                document: "Node document"
+            });
+            const added1 = node.addSubdocument("Added document");
+            added1.addSubdocument("Added subdocument");
+
+            expect(node.getChanges()).toEqual({
+                handlePath: "/0",
+                type: "changed",
+                added: [{
+                    document: "Added document",
+                    children: [{
+                        document: "Added subdocument",
+                    }],
+                }],
+            });
+        });
+    });
+});
+
+describe("AddedNode", () => {
+    describe("addSubdocument", () => {
+        it("should add subdocument", () => {
+            const root = new Node<string>();
+            const node = new HandleNode(root, {
+                path: "/0",
+                document: "Node document"
+            });
+            const addedNode = node.addSubdocument("Added document");
+            const addedNode2 = addedNode.addSubdocument("Another document");
+
+            expect(addedNode2).toBeInstanceOf(AddedNode);
+            expect(addedNode2.document).toEqual("Another document");
+            expect(addedNode.addedChildren).toEqual([addedNode2]);
         });
     });
 });

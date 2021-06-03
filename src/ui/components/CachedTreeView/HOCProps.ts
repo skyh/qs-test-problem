@@ -1,5 +1,9 @@
 import {ComponentType} from "react";
 
+export interface DocumentFactory<Document> {
+    create(): Document
+}
+
 export interface HOCProps<Document> {
     /**
      * Component to render document
@@ -15,4 +19,6 @@ export interface HOCProps<Document> {
         document: Document
         onEdited(document: Document): void
     }>
+
+    documentFactory: DocumentFactory<Document>
 }

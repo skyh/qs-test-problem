@@ -67,16 +67,16 @@ export class InMemoryStorage<T> implements db.Storage<T> {
     public static create<T>(sn?: InMemoryStorageRootSnapshot<T>): InMemoryStorage<T> {
         const root = new InMemoryNode<T>();
         if (sn && sn.children) {
-            this.buildFromSnapshot(root, sn.children);
+            this.applySnapshot(root, sn.children);
         }
         return new InMemoryStorage(root);
     }
 
-    private static buildFromSnapshot<T>(parent: InMemoryNode<T>, snapshots: InMemoryStorageSnapshot<T>[]) {
+    private static applySnapshot<T>(parent: InMemoryNode<T>, snapshots: InMemoryStorageSnapshot<T>[]) {
         for (const sn of snapshots) {
             const node = parent.appendDocument(sn.document);
             if (sn.children) {
-                this.buildFromSnapshot(node, sn.children);
+                this.applySnapshot(node, sn.children);
             }
         }
     }
@@ -102,9 +102,15 @@ export class InMemoryStorage<T> implements db.Storage<T> {
     private applyChange(change: NodeChange<T>) {
         const node = this.queryDocumentNode(Path.create(change.handlePath));
         assert(node, "Attempt to apply change to missing node");
+        // FIXME: get rid of switch
         switch (change.type) {
             case "changed":
-                node.document = change.document;
+                if ("document" in change) {
+                    node.document = change.document;
+                }
+                if ("added" in change) {
+                    InMemoryStorage.applySnapshot(node, change.added); //TODO: make NodeChange.added = InMemoryStorageSnapshot
+                }
                 break;
             case "deleted":
                 node.deleted = true;
