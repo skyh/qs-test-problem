@@ -2,7 +2,7 @@ import React, {FC, Fragment, useCallback, useState} from 'react';
 import {assert} from "../lib/assert";
 
 import {db} from "../lib/db";
-import {StoragePartialView} from "../lib/db/cache/StoragePartialView";
+import {Cache} from "../lib/db/cache/Cache";
 import styles from './App.module.sass';
 import {AppDocument} from "../AppDocument";
 import {Storage} from "../lib/db/storage/Storage";
@@ -14,6 +14,7 @@ import {CreateDBTreeView} from './components/DBTreeView/DBTreeView';
 import {DocumentEditor} from "./components/DocumentEditor/DocumentEditor";
 
 type AppStorage = db.storage.Storage<AppDocument>
+type AppCache = db.cache.Cache<AppDocument>
 
 const DBTreeView = CreateDBTreeView({
     DocumentComponent: Document
@@ -33,8 +34,8 @@ function createDefaultStorage(): AppStorage {
     return Storage.create(defaults);
 }
 
-function createEmptyCache() {
-    return StoragePartialView.create<AppDocument>();
+function createEmptyCache(): AppCache {
+    return Cache.create<AppDocument>();
 }
 
 export const App: FC = () => {

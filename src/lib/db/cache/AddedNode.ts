@@ -39,10 +39,12 @@ export class AddedNode<Document> implements db.cache.EditableNode<Document> {
 
     public getChanges(): db.DocumentNodeSnapshot<Document> {
         const {document, addedChildren} = this;
-        const result: db.DocumentNodeSnapshot<Document> = {document};
+
+        let children;
         if (addedChildren.length > 0) {
-            result.children = addedChildren.map(child => child.getChanges());
+            children = addedChildren.map(child => child.getChanges());
         }
-        return result;
+
+        return {document, children};
     }
 }

@@ -34,10 +34,10 @@ export class Storage<T> implements db.storage.Storage<T> {
         public readonly root: Node<T>
     ) {}
 
-    public queryDocument(path: db.SerializedPath): null | T {
+    public queryDocument(path: db.SerializedPath): undefined | T {
         const node = this.queryDocumentNode(Path.create(path));
         if (!node || node.deleted) {
-            return null;
+            return;
         }
         return node.document;
     }

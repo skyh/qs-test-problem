@@ -1,3 +1,5 @@
+import type {Node} from "./cache/Node"; // FIXME: get rid of this
+
 export namespace db {
     export type PathSegment = number
     export type SerializedPath = string
@@ -63,7 +65,7 @@ export namespace db {
 export namespace db.storage {
     export interface Storage<T> {
         readonly root: Node<T>
-        queryDocument(path: SerializedPath): null | T
+        queryDocument(path: SerializedPath): undefined | T
         applyChanges(change: StorageChange<T>): ApplyChangesResult
     }
 
@@ -87,14 +89,11 @@ export namespace db.storage {
 export namespace db.cache {
     export interface Cache<T> {
         readonly root: Node<T>
-        getChanges(): db.StorageChange<T>
+        queryDocument(path: SerializedPath): undefined | T
         addHandle(handle: db.DocumentHandle<T>): HandleNode<T>
-        discardChanges(): void
         removeHandle(path: db.SerializedPath): void
-    }
-
-    export interface Node<T> {
-
+        getChanges(): db.StorageChange<T>
+        discardChanges(): void
     }
 
     export interface HandleNode<T> {

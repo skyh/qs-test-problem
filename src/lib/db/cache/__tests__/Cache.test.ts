@@ -1,19 +1,19 @@
 import {AddedNode} from "../AddedNode";
 import {HandleNode, MissingNode, Node} from "../Node";
-import {StoragePartialView} from "../StoragePartialView";
+import {Cache} from "../Cache";
 
 type TestDocument = string;
 
 describe("StoragePartialView", () => {
-    let storage: StoragePartialView<TestDocument>;
+    let storage: Cache<TestDocument>;
 
     beforeEach(() => {
-        storage = StoragePartialView.create<TestDocument>();
+        storage = Cache.create<TestDocument>();
     });
 
     describe("create", () => {
         it("should create storage instance", () => {
-            expect(StoragePartialView.create()).toBeInstanceOf(StoragePartialView);
+            expect(Cache.create()).toBeInstanceOf(Cache);
         });
     });
 
@@ -221,7 +221,7 @@ describe("AddedNode", () => {
 
 describe("regress", () => {
     test("no mis-inserting", () => {
-        const storage = StoragePartialView.create<string>();
+        const storage = Cache.create<string>();
 
         const handles = [{
             path: "/0/1/1",

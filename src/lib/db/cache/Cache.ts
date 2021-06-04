@@ -4,7 +4,7 @@ import {Path} from "../Path";
 import {CacheNode} from "./CacheNode";
 import {HandleNode, MissingNode, Node} from "./Node";
 
-export class StoragePartialView<T> implements db.cache.Cache<T> {
+export class Cache<T> implements db.cache.Cache<T> {
     public static create<T>() {
         const root = new Node<T>();
         return new this(root);
@@ -59,8 +59,8 @@ export class StoragePartialView<T> implements db.cache.Cache<T> {
 
     public queryDocument(path: db.SerializedPath): undefined | T {
         const node = this.getNodeWithHandlePath(Path.create(path));
-        if (!node) return
-        if (node instanceof MissingNode) return
+        if (!node) return;
+        if (node instanceof MissingNode) return;
         return node.handle.document;
     }
 
