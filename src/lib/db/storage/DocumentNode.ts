@@ -22,10 +22,6 @@ export class DocumentNode<T> extends Node<T> implements db.storage.DocumentNode<
         this.deleted = true;
     }
 
-    public undelete() {
-        this.deleted = false;
-    }
-
     public setDocument(document: T) {
         this.document = document;
     }

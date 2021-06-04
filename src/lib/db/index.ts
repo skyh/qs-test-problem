@@ -79,7 +79,6 @@ export namespace db.storage {
         readonly deleted: boolean
 
         delete(): void
-        undelete(): void
         setDocument(document: T): void
         getHandle(): DocumentHandle<T>
     }
