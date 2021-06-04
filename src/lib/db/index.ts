@@ -19,37 +19,37 @@ export namespace db {
     }
 
     export interface DocumentHandle<Document> {
-        path: SerializedPath
-        document: Document
+        readonly path: SerializedPath
+        readonly document: Document
     }
 
     export interface ApplyChangesResult {
-        affected: SerializedPath[],
+        readonly affected: SerializedPath[],
     }
 
     export interface NodeSnapshot<T> {
-        children?: Array<DocumentNodeSnapshot<T>>
+        readonly children?: Array<DocumentNodeSnapshot<T>>
     }
 
     export interface DocumentNodeSnapshot<T> extends NodeSnapshot<T> {
-        document: T,
+        readonly document: T,
     }
 
     export interface NodeChangeDocumentChanged<T> {
-        type: "changed"
-        handlePath: SerializedPath
-        document: T
+        readonly type: "changed"
+        readonly handlePath: SerializedPath
+        readonly document: T
     }
 
     export interface NodeChangeSubdocumentsAdded<T> {
-        type: "changed"
-        handlePath: SerializedPath
-        added: Array<DocumentNodeSnapshot<T>>
+        readonly type: "changed"
+        readonly handlePath: SerializedPath
+        readonly added: Array<DocumentNodeSnapshot<T>>
     }
 
     export interface NodeChangeNodeDeleted {
-        type: "deleted"
-        handlePath: SerializedPath
+        readonly type: "deleted"
+        readonly handlePath: SerializedPath
     }
 
     export type NodeChange<T> =
@@ -86,7 +86,7 @@ export namespace db.storage {
 
 export namespace db.cache {
     export interface Cache<T> {
-        root: Node<T>
+        readonly root: Node<T>
         getChanges(): db.StorageChange<T>
         addHandle(handle: db.DocumentHandle<T>): HandleNode<T>
         discardChanges(): void
