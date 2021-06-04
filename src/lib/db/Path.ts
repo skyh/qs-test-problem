@@ -1,21 +1,21 @@
 import {arraysEqual} from "../arraysEqual";
 import {assert} from "../assert";
-import {db} from "./db";
+import {db} from "./index";
 
 const PATH_SEPARATOR = "/";
 
-export class Path implements db.NodePath {
+export class Path implements db.Path {
     public static create(): Path
     public static create(path: Path): Path
-    public static create(serialized: db.EncodedNodePath): Path
-    public static create(parts: db.NodeKey[]): Path
-    public static create(input?: Path | db.EncodedNodePath | db.NodeKey[]): Path {
+    public static create(serialized: db.SerializedPath): Path
+    public static create(parts: db.PathSegment[]): Path
+    public static create(input?: Path | db.SerializedPath | db.PathSegment[]): Path {
         if (input === undefined) {
             return new this([]);
         } else if (Array.isArray(input)) {
             return new this(input.slice());
         } else if (input instanceof Path) {
-            return Path.create(input.keys);
+            return Path.create(input.segments);
         } else {
             return new this(this.decode(input));
         }
@@ -23,10 +23,10 @@ export class Path implements db.NodePath {
 
     public static equals(a: Path, b: Path): boolean {
         if (a === b) return true;
-        return arraysEqual(a.keys, b.keys);
+        return arraysEqual(a.segments, b.segments);
     }
 
-    private static decode(serialized: db.EncodedNodePath): db.NodeKey[] {
+    private static decode(serialized: db.SerializedPath): db.PathSegment[] {
         if (serialized === PATH_SEPARATOR) return [];
 
         const pathStarter = serialized[0];
@@ -41,27 +41,27 @@ export class Path implements db.NodePath {
     }
 
     private constructor(
-        public keys: db.NodeKey[],
+        public segments: db.PathSegment[],
     ) {}
 
-    public getParent(): db.NodePath {
-        const {keys} = this;
-        assert(keys.length > 0, "Attempt to get parent for root path");
-        return new Path(keys.slice(0, -1));
+    public getParent(): db.Path {
+        const {segments} = this;
+        assert(segments.length > 0, "Attempt to get parent for root path");
+        return new Path(segments.slice(0, -1));
     }
 
-    public appendChild(key: db.NodeKey): Path {
-        return new Path([...this.keys, key]);
+    public append(segment: db.PathSegment): Path {
+        return new Path([...this.segments, segment]);
     }
 
-    public getKey(): number {
-        const {keys} = this;
-        assert(keys.length > 0);
-        return keys[keys.length - 1];
+    public lastSegment(): number {
+        const {segments} = this;
+        assert(segments.length > 0);
+        return segments[segments.length - 1];
     }
 
-    public serialize(): db.EncodedNodePath {
-        return PATH_SEPARATOR + this.keys.join(PATH_SEPARATOR);
+    public serialize(): db.SerializedPath {
+        return PATH_SEPARATOR + this.segments.join(PATH_SEPARATOR);
     }
 
     public equals(other: Path): boolean {
@@ -70,13 +70,13 @@ export class Path implements db.NodePath {
 
     public relativeTo(other: Path): Path {
         assert(other.includes(this), "Paths are not nested");
-        const keys = this.keys.slice(other.keys.length);
+        const keys = this.segments.slice(other.segments.length);
         return new Path(keys);
     }
 
     public includes(other: Path): boolean {
-        const {keys: thisKeys} = this;
-        const {keys: otherKeys} = other;
+        const {segments: thisKeys} = this;
+        const {segments: otherKeys} = other;
 
         if (thisKeys.length > otherKeys.length) {
             return false;
@@ -92,6 +92,6 @@ export class Path implements db.NodePath {
     }
 
     public isRoot(): boolean {
-        return this.keys.length === 0;
+        return this.segments.length === 0;
     }
 }

@@ -1,9 +1,9 @@
-import {Path} from "./Path";
+import {Path} from "../Path";
 
 describe("Path", () => {
     describe("static create()", () => {
         it("should create sample path", () => {
-            expect(Path.create("/0/0/0/1").keys).toEqual([0, 0, 0, 1]);
+            expect(Path.create("/0/0/0/1").segments).toEqual([0, 0, 0, 1]);
         });
 
         it("should throw error if path contains non-digits", () => {
@@ -19,7 +19,7 @@ describe("Path", () => {
         });
 
         it("should create empty path", () => {
-            expect(Path.create("/").keys).toEqual([]);
+            expect(Path.create("/").segments).toEqual([]);
         });
     });
 
@@ -58,13 +58,13 @@ describe("Path", () => {
         it("should throw for root path", () => {
             const path = Path.create("/");
             expect(() => {
-                path.getKey();
+                path.lastSegment();
             }).toThrow();
         });
 
         it("should return own key", () => {
             const path = Path.create("/0/12/32/343/42");
-            expect(path.getKey()).toEqual(42);
+            expect(path.lastSegment()).toEqual(42);
         });
     });
 

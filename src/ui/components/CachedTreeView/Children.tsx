@@ -1,7 +1,9 @@
 import React, {FC} from "react";
+import {AddedNode} from "../../../lib/db/cache/AddedNode";
+import {CacheNode} from "../../../lib/db/cache/CacheNode";
+import {HandleNode} from "../../../lib/db/cache/Node";
 
 import {HOCProps} from "./HOCProps";
-import {AddedNode, CacheNode, HandleNode} from "../../../lib/StoragePartialView";
 import {CreateRow} from "./rows/Row";
 
 import styles from "./Children.module.sass";

@@ -1,6 +1,8 @@
 import React, {FC} from "react";
+import {AddedNode} from "../../../../lib/db/cache/AddedNode";
+import {CacheNode} from "../../../../lib/db/cache/CacheNode";
+import {HandleNode, MissingNode} from "../../../../lib/db/cache/Node";
 
-import {AddedNode, CacheNode, HandleNode, MissingNode} from "../../../../lib/StoragePartialView";
 import {HOCProps} from "../HOCProps";
 import {CreateAddedNodeRow} from "./AddedNodeRow";
 import {CreateHandleNodeRow} from "./HandleNodeRow";

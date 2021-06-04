@@ -1,7 +1,7 @@
 import {AppDocument} from "./AppDocument";
-import {InMemoryStorageRootSnapshot} from "./lib/InMemoryStorage";
+import {db} from "./lib/db";
 
-export const defaults: InMemoryStorageRootSnapshot<AppDocument> = {
+export const defaults: db.NodeSnapshot<AppDocument> = {
     children: [{
         document: "A car",
         children: [{

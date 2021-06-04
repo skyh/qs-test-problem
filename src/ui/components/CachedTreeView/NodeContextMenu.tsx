@@ -1,5 +1,7 @@
 import React, {FC, Fragment} from "react";
-import {AddedNode, CacheNode, HandleNode, MissingNode} from "../../../lib/StoragePartialView";
+import {AddedNode} from "../../../lib/db/cache/AddedNode";
+import {CacheNode} from "../../../lib/db/cache/CacheNode";
+import {HandleNode, MissingNode} from "../../../lib/db/cache/Node";
 import {ContextMenu} from "../ContextMenu/ContextMenu";
 import {ContextMenuItem} from "../ContextMenu/ContextMenuItem";
 

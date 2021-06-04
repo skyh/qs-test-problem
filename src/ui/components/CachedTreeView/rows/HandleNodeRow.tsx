@@ -1,7 +1,6 @@
 import clsx from "clsx";
 import React, {FC, useCallback, useMemo} from "react";
-
-import {HandleNode} from "../../../../lib/StoragePartialView";
+import {HandleNode} from "../../../../lib/db/cache/Node";
 
 import {HOCProps} from "../HOCProps";
 import {RowProps} from "../RowProps";

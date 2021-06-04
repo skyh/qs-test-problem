@@ -1,17 +1,19 @@
 import React, {FC, Fragment, useCallback, useState} from 'react';
 import {assert} from "../lib/assert";
 
-import {db} from "../lib/db/db";
-import {StoragePartialView} from "../lib/StoragePartialView";
+import {db} from "../lib/db";
+import {StoragePartialView} from "../lib/db/cache/StoragePartialView";
 import styles from './App.module.sass';
 import {AppDocument} from "../AppDocument";
-import {InMemoryStorage} from "../lib/InMemoryStorage";
+import {Storage} from "../lib/db/storage/Storage";
 import {defaults} from "../defaults";
 import {CreateCachedTreeView} from "./components/CachedTreeView/CachedTreeView";
 import {ThreeColLayout} from "./components/ThreeColLayout/ThreeColLayout";
 import {Document} from "./components/Document/Document";
 import {CreateDBTreeView} from './components/DBTreeView/DBTreeView';
 import {DocumentEditor} from "./components/DocumentEditor/DocumentEditor";
+
+type AppStorage = db.storage.Storage<AppDocument>
 
 const DBTreeView = CreateDBTreeView({
     DocumentComponent: Document
@@ -27,8 +29,8 @@ const CachedTreeView = CreateCachedTreeView({
     },
 });
 
-function createDefaultStorage() {
-    return InMemoryStorage.create<AppDocument>(defaults);
+function createDefaultStorage(): AppStorage {
+    return Storage.create(defaults);
 }
 
 function createEmptyCache() {
@@ -51,7 +53,7 @@ export const App: FC = () => {
         setHack(hack => hack + 1);
     }, [cache]);
 
-    const onCacheDocumentRequest = useCallback((path: db.EncodedNodePath) => {
+    const onCacheDocumentRequest = useCallback((path: db.SerializedPath) => {
         const document = storage.queryDocument(path);
         assert(document);
         onDocumentActivated({

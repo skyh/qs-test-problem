@@ -1,18 +1,20 @@
 import React, {FC, MouseEventHandler, useCallback, useState} from "react";
+import {AddedNode} from "../../../lib/db/cache/AddedNode";
+import {CacheNode} from "../../../lib/db/cache/CacheNode";
+import {HandleNode, MissingNode, Node} from "../../../lib/db/cache/Node";
 
-import {Node, CacheNode, HandleNode, MissingNode, AddedNode} from "../../../lib/StoragePartialView";
 import {Popup} from "../Popup/Popup";
 import {CreateChildren} from "./Children";
 
 import {HOCProps} from "./HOCProps";
 import styles from "./CachedTreeView.module.sass";
-import { db } from "../../../lib/db/db";
+import { db } from "../../../lib/db";
 import { assert } from "../../../lib/assert";
 import {CreateNodeContextMenu} from "./NodeContextMenu";
 
 interface Props<Document> {
     node: AddedNode<Document> | CacheNode<Document> | Node<Document>
-    onDocumentRequest(path: db.EncodedNodePath): void
+    onDocumentRequest(path: db.SerializedPath): void
 }
 
 export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Document>) => {
