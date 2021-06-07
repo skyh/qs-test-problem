@@ -1,7 +1,5 @@
 import React, {FC, Fragment} from "react";
-import {AddedNode} from "../../../lib/db/cache/AddedNode";
-import {CacheNode} from "../../../lib/db/cache/CacheNode";
-import {HandleNode, MissingNode} from "../../../lib/db/cache/Node";
+import {db} from "../../../lib/db";
 import {ContextMenu} from "../ContextMenu/ContextMenu";
 import {ContextMenuItem} from "../ContextMenu/ContextMenuItem";
 
@@ -10,15 +8,15 @@ import {HOCProps} from "./HOCProps";
 
 interface Props<Document> {
     position: ContextMenuPosition
-    node: CacheNode<Document>
+    node: db.cache.AnyNode<Document>
     onDeactivate: () => void
-    onNodeEdit: (node: HandleNode<Document>) => void
-    onNodeDelete: (node: HandleNode<Document> | AddedNode<Document>) => void
-    onNodeDiscardEdit: (node: HandleNode<Document>) => void
-    onNodeUndelete: (node: HandleNode<Document>) => void
-    onNodeAddSubdocument: (node: HandleNode<Document> | AddedNode<Document>) => void
-    onNodeDiscardSubdocuments: (node: HandleNode<Document> | AddedNode<Document>) => void
-    onDocumentRequest: (node: CacheNode<Document>) => void
+    onNodeEdit: (node: db.cache.LiveNode<Document>) => void
+    onNodeDelete: (node: db.cache.LiveNode<Document>) => void
+    onNodeDiscardEdit: (node: db.cache.HandleNode<Document>) => void
+    onNodeUndelete: (node: db.cache.HandleNode<Document>) => void
+    onNodeAddSubdocument: (node: db.cache.LiveNode<Document>) => void
+    onNodeDiscardSubdocuments: (node: db.cache.LiveNode<Document>) => void
+    onDocumentRequest: (node: db.cache.MissingNode<Document>) => void
 }
 
 export const CreateNodeContextMenu = <T extends any>(hocProps: HOCProps<T>) => {
@@ -26,13 +24,13 @@ export const CreateNodeContextMenu = <T extends any>(hocProps: HOCProps<T>) => {
         const {position, node, onDeactivate, onNodeEdit, onNodeDiscardSubdocuments, onDocumentRequest, onNodeDelete, onNodeUndelete, onNodeDiscardEdit, onNodeAddSubdocument} = props
         return (
             <ContextMenu position={position} onDeactivate={onDeactivate}>
-                {node instanceof MissingNode && <ContextMenuItem onClick={()=>{
+                {node.type === "MISSING" && <ContextMenuItem onClick={()=>{
                     onDocumentRequest(node);
                     onDeactivate();
                 }}>
                     Pull
                 </ContextMenuItem>}
-                {node instanceof HandleNode && <Fragment>
+                {node.type === "HANDLE" && <Fragment>
                     {node.deleted ? <Fragment>
                         <ContextMenuItem onClick={() => {
                             onNodeUndelete(node);
@@ -73,7 +71,7 @@ export const CreateNodeContextMenu = <T extends any>(hocProps: HOCProps<T>) => {
                         </ContextMenuItem>
                     </Fragment>}
                 </Fragment>}
-                {node instanceof AddedNode && <Fragment>
+                {node.type === "ADDED" && <Fragment>
                     <ContextMenuItem onClick={() => {
                         onNodeAddSubdocument(node);
                         onDeactivate();

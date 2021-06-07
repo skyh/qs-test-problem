@@ -1,12 +1,12 @@
 import clsx from "clsx";
 import React, {FC, useCallback, useMemo} from "react";
-import {MissingNode} from "../../../../lib/db/cache/Node";
+import {db} from "../../../../lib/db";
 
 import {HOCProps} from "../HOCProps";
 import {RowProps} from "../RowProps";
 import styles from "./MissingNodeRow.module.sass";
 
-type Props<Document> = RowProps<MissingNode<Document>>
+type Props<Document> = RowProps<db.cache.MissingNode<Document>>
 
 export const CreateMissingNodeRow = <Document extends any>(hocProps: HOCProps<Document>) => {
     const MissingNodeRow: FC<Props<Document>> = (props) => {

@@ -1,13 +1,13 @@
 import clsx from "clsx";
 import React, {FC, useCallback, useMemo} from "react";
-import {HandleNode} from "../../../../lib/db/cache/Node";
+import {db} from "../../../../lib/db";
 
 import {HOCProps} from "../HOCProps";
 import {RowProps} from "../RowProps";
 
 import styles from "./HandleNodeRow.module.sass";
 
-type Props<Document> = RowProps<HandleNode<Document>>
+type Props<Document> = RowProps<db.cache.HandleNode<Document>>
 
 export const CreateHandleNodeRow = <Document extends any>(hocProps: HOCProps<Document>) => {
     const {DocumentComponent} = hocProps;

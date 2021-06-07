@@ -1,7 +1,5 @@
 import React, {FC} from "react";
-import {AddedNode} from "../../../../lib/db/cache/AddedNode";
-import {CacheNode} from "../../../../lib/db/cache/CacheNode";
-import {HandleNode, MissingNode} from "../../../../lib/db/cache/Node";
+import {db} from "../../../../lib/db";
 
 import {HOCProps} from "../HOCProps";
 import {CreateAddedNodeRow} from "./AddedNodeRow";
@@ -14,22 +12,22 @@ export const CreateRow = <Document extends any>(hocProps: HOCProps<Document>) =>
     const MissingNodeRow = CreateMissingNodeRow(hocProps);
     const AddedNodeRow = CreateAddedNodeRow(hocProps);
 
-    const Row: FC<RowProps<CacheNode<Document> | AddedNode<Document>>> = (props) => {
+    const Row: FC<RowProps<db.cache.AnyNode<Document>>> = (props) => {
         const {node} = props;
 
-        if (node instanceof HandleNode) {
+        if (node.type === "HANDLE") {
             return <HandleNodeRow {...props} node={node} />;
         }
 
-        if (node instanceof MissingNode) {
+        if (node.type === "MISSING") {
             return <MissingNodeRow {...props} node={node} />;
         }
 
-        if (node instanceof AddedNode) {
+        if (node.type === "ADDED") {
             return <AddedNodeRow {...props} node={node} />;
         }
 
-        throw new Error("Unsupported node type")
+        throw new Error("Unsupported node type");
     };
 
     return Row;

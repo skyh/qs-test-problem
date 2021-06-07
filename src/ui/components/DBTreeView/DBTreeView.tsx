@@ -7,7 +7,7 @@ import {HOCProps} from "./HOCProps";
 import styles from "./DBTreeView.module.sass"
 
 interface Props<Document> {
-    nodes: ReadonlyArray<db.storage.DocumentNode<Document>>
+    node: db.storage.Node<Document>
     onActivate: (handle: db.DocumentHandle<Document>) => void;
 }
 
@@ -17,7 +17,7 @@ export const CreateDBTreeView = <Document extends any>(hocProps: HOCProps<Docume
     const Children = CreateChildren(hocProps);
 
     const DBTreeView: FC<Props<Document>> = (props) => {
-        const [selectedNode, setSelectedNode] = useState<undefined | DocumentNode>(undefined);
+        const [selectedNode, setSelectedNode] = useState<DocumentNode>();
 
         const onNodeSelect = useCallback((node) => {
             setSelectedNode(node);
@@ -30,7 +30,7 @@ export const CreateDBTreeView = <Document extends any>(hocProps: HOCProps<Docume
 
         return (
             <div className={styles.DBTreeView}>
-                <Children nodes={props.nodes} selectedNode={selectedNode} onNodeSelect={onNodeSelect} onNodeActivate={onNodeActivate}/>
+                <Children nodes={props.node.children} selectedNode={selectedNode} onNodeSelect={onNodeSelect} onNodeActivate={onNodeActivate}/>
             </div>
         );
     };

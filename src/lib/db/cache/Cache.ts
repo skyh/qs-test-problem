@@ -97,17 +97,6 @@ export class Cache<T> implements db.cache.Cache<T> {
         return dfs(this.root);
     }
 
-    private getNode(path: db.Path): undefined | Node<T> {
-        let currentNode = this.root;
-
-        for (const segment of path.segments) {
-            currentNode = currentNode.children[segment];
-            if (!currentNode) return;
-        }
-
-        return currentNode;
-    }
-
     private getNodeWithHandlePath(path: db.Path): undefined | CacheNode<T> {
         return this.nodesCacheByHandlePath.get(path.serialize());
     }

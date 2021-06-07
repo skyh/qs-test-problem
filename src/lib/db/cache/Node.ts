@@ -3,10 +3,11 @@ import {db} from "../index";
 import {Path} from "../Path";
 import {AddedNode} from "./AddedNode";
 import {CacheNode} from "./CacheNode";
-import {NodeWithHandle} from "./NodeWithHandle";
 
-export class Node<T> {
+export class Node<T> implements db.cache.Node<T> {
     public children: Array<CacheNode<T>> = [];
+
+    public readonly type: string = "";
 
     public appendHandle(handle: db.DocumentHandle<T>): HandleNode<T> {
         return this.pushNode(new HandleNode(this, handle));
@@ -50,7 +51,9 @@ export class Node<T> {
     }
 }
 
-export class MissingNode<T> extends Node<T> implements NodeWithHandle {
+export class MissingNode<T> extends Node<T> implements db.cache.MissingNode<T> {
+    public readonly type = "MISSING";
+
     public key: db.PathSegment = -1;
 
     constructor(public readonly parent: Node<T>, public readonly handlePath: db.Path,) {
@@ -65,8 +68,10 @@ export class MissingNode<T> extends Node<T> implements NodeWithHandle {
     }
 }
 
-export class HandleNode<Document> extends Node<Document> implements NodeWithHandle {
+export class HandleNode<Document> extends Node<Document> implements db.cache.HandleNode<Document> {
     public static readonly EmptyDocument = undefined; // TODO: in theory, undefined could also be a valid document
+
+    public readonly type = "HANDLE";
 
     public key: db.PathSegment = -1;
     public deleted = false;
@@ -137,6 +142,10 @@ export class HandleNode<Document> extends Node<Document> implements NodeWithHand
         this.deleted = true;
     }
 
+    public undelete() {
+        this.deleted = false;
+    }
+
     public discardChanges() {
         this.deleted = false;
         this.resetEditedDocument();
@@ -147,5 +156,9 @@ export class HandleNode<Document> extends Node<Document> implements NodeWithHand
         const node = new AddedNode(this, document);
         this.addedChildren.push(node);
         return node;
+    }
+
+    public discardAddedChildren(): void {
+        this.addedChildren = [];
     }
 }

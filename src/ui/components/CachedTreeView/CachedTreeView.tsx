@@ -1,19 +1,16 @@
 import React, {FC, MouseEventHandler, useCallback, useState} from "react";
-import {AddedNode} from "../../../lib/db/cache/AddedNode";
-import {CacheNode} from "../../../lib/db/cache/CacheNode";
-import {HandleNode, MissingNode, Node} from "../../../lib/db/cache/Node";
 
 import {Popup} from "../Popup/Popup";
 import {CreateChildren} from "./Children";
 
 import {HOCProps} from "./HOCProps";
 import styles from "./CachedTreeView.module.sass";
-import { db } from "../../../lib/db";
-import { assert } from "../../../lib/assert";
+import {db} from "../../../lib/db";
+import {assert} from "../../../lib/assert";
 import {CreateNodeContextMenu} from "./NodeContextMenu";
 
 interface Props<Document> {
-    node: AddedNode<Document> | CacheNode<Document> | Node<Document>
+    node: db.cache.Node<Document>
     onDocumentRequest(path: db.SerializedPath): void
 }
 
@@ -24,28 +21,28 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
     const {DocumentEditorComponent, documentFactory} = hocProps;
 
     const CachedTreeView: FC<Props<Document>> = (props) => {
-        const [selectedNode, setSelectedNode] = useState<CacheNode<Document>>();
+        const [selectedNode, setSelectedNode] = useState<db.cache.CacheNode<Document>>();
 
         const onNodeSelect = useCallback((node) => {
             setSelectedNode(node);
         }, []);
 
-        const [editingNode, setEditingNode] = useState<AddedNode<Document> | HandleNode<Document>>();
-        const [addingSubdocumentNode, setAddingSubdocumentNode] = useState<AddedNode<Document> | HandleNode<Document>>();
+        const [editingNode, setEditingNode] = useState<db.cache.LiveNode<Document>>();
+        const [addingSubdocumentNode, setAddingSubdocumentNode] = useState<db.cache.LiveNode<Document>>();
         const [contextMenuPosition, setContextMenuPosition] = useState<[number, number]>();
 
-        const onDocumentRequest = useCallback((node: CacheNode<Document>) => {
+        const onDocumentRequest = useCallback((node: db.cache.CacheNode<Document>) => {
             props.onDocumentRequest(node.handlePath.serialize());
         }, [props]);
 
-        const onNodeActivate = useCallback((node: AddedNode<Document> | CacheNode<Document>) => {
-            if (node instanceof MissingNode) {
+        const onNodeActivate = useCallback((node: db.cache.AnyNode<Document>) => {
+            if (node.type === "MISSING") {
                 onDocumentRequest(node);
-            } else if (node instanceof HandleNode) {
+            } else if (node.type === "HANDLE") {
                 if (!node.deleted) {
                     setEditingNode(node);
                 }
-            } else if (node instanceof AddedNode) {
+            } else if (node.type === "ADDED") {
                 setEditingNode(node);
             }
         }, [onDocumentRequest]);
@@ -99,7 +96,7 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
                         forceRerenderHack();
                     }}
                     onNodeUndelete={(node) => {
-                        node.deleted = false;
+                        node.undelete();
                         forceRerenderHack();
                     }}
                     onDocumentRequest={onDocumentRequest}
@@ -107,7 +104,7 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
                         setAddingSubdocumentNode(node);
                     }}
                     onNodeDiscardSubdocuments={(node) => {
-                        node.addedChildren = [];
+                        node.discardAddedChildren();
                         forceRerenderHack();
                     }}
                 />}

@@ -1,11 +1,11 @@
 import {assert} from "../../assert";
 import {db} from "../index";
-import {CacheNode} from "./CacheNode";
 import {HandleNode} from "./Node";
 
-export class AddedNode<Document> implements db.cache.EditableNode<Document> {
+export class AddedNode<Document> implements db.cache.AddedNode<Document> {
+    public readonly type = "ADDED";
+
     public addedChildren: Array<AddedNode<Document>> = [];
-    public children: Array<CacheNode<Document>> = []; // FIXME: remove this
 
     constructor(
         public parent: HandleNode<Document> | AddedNode<Document>,
@@ -46,5 +46,9 @@ export class AddedNode<Document> implements db.cache.EditableNode<Document> {
         }
 
         return {document, children};
+    }
+
+    public discardAddedChildren(): void {
+        this.addedChildren = [];
     }
 }

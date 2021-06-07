@@ -104,7 +104,7 @@ export const App: FC = () => {
                     <div className={styles.Hint}>
                         Database view. Double click to push document into the cache.
                     </div>
-                    <DBTreeView nodes={storage.root.children} onActivate={onDocumentActivated}/>
+                    <DBTreeView node={storage.root} onActivate={onDocumentActivated}/>
                 </Fragment>
                 <Fragment>
                     <div className={styles.CacheControls}>
