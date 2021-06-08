@@ -94,9 +94,7 @@ export namespace db.cache {
         discardChanges(): void
     }
 
-    // TODO: EditableNode
     export type LiveNode<T> = AddedNode<T> | HandleNode<T>
-
     export type CacheNode<T> = HandleNode<T> | MissingNode<T>
     export type AnyNode<T> = AddedNode<T> | HandleNode<T> | MissingNode<T>
 
@@ -104,8 +102,8 @@ export namespace db.cache {
         readonly type: string
         readonly children: ReadonlyArray<CacheNode<T>>
         appendHandle(handle: db.DocumentHandle<T>): HandleNode<T>
-        replaceNode(oldNode: CacheNode<T>, newNode: CacheNode<T>): void
         appendMissing(path: db.Path): MissingNode<T>
+        replaceChild(oldNode: CacheNode<T>, newNode: CacheNode<T>): void
         removeChild(node: CacheNode<T>): void
     }
 
@@ -118,7 +116,9 @@ export namespace db.cache {
 
     export interface NodeWithAddedChildren<T> {
         readonly addedChildren: ReadonlyArray<AddedNode<T>>
+        readonly hasAddedChildren: boolean
         discardAddedChildren(): void
+        addSubdocument(document: T): AddedNode<T>
     }
 
     export interface HandleNode<T> extends Node<T>, NodeWithAddedChildren<T> {
@@ -129,7 +129,6 @@ export namespace db.cache {
         readonly deleted: boolean
         readonly editedDocument: any
         readonly edited: boolean
-        readonly childrenAdded: boolean
         readonly changed: boolean
         readonly editingDocument: T
         getChanges(): undefined | db.NodeChange<T>
@@ -138,14 +137,12 @@ export namespace db.cache {
         setEditedDocument(document: T): void
         delete(): void
         undelete(): void
-        addSubdocument(document: T): AddedNode<T>
     }
 
     export interface AddedNode<T> extends NodeWithAddedChildren<T> {
         readonly type: "ADDED"
         readonly document: T
         readonly editingDocument: T
-        addSubdocument(document: T): AddedNode<T>
         delete(): void
         setDocument(document: T): void
         setEditedDocument(document: T): void

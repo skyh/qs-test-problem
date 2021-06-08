@@ -27,7 +27,7 @@ export class Cache<T> implements db.cache.Cache<T> {
                 return existingNode;
             } else if (existingNode instanceof MissingNode) {
                 const handleNode = existingNode.createHandleNode(handle);
-                existingNode.parent.replaceNode(existingNode, handleNode);
+                existingNode.parent.replaceChild(existingNode, handleNode);
                 return handleNode;
             } else {
                 throw new Error("Not implemented");

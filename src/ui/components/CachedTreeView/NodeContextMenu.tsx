@@ -57,7 +57,7 @@ export const CreateNodeContextMenu = <T extends any>(hocProps: HOCProps<T>) => {
                         }}>
                             Discard edit
                         </ContextMenuItem>}
-                        {node.childrenAdded && <ContextMenuItem onClick={() => {
+                        {node.hasAddedChildren && <ContextMenuItem onClick={() => {
                             onNodeDiscardSubdocuments(node);
                             onDeactivate();
                         }}>

@@ -13,7 +13,7 @@ export class Node<T> implements db.cache.Node<T> {
         return this.pushNode(new HandleNode(this, handle));
     }
 
-    public replaceNode(oldNode: CacheNode<T>, newNode: CacheNode<T>) {
+    public replaceChild(oldNode: CacheNode<T>, newNode: CacheNode<T>) {
         assert(this.children[oldNode.key] === oldNode, "Old node is not a child node");
         this.children[oldNode.key] = newNode;
         newNode.key = oldNode.key;
@@ -91,12 +91,12 @@ export class HandleNode<Document> extends Node<Document> implements db.cache.Han
         return this.editedDocument !== HandleNode.EmptyDocument
     }
 
-    get childrenAdded(): boolean {
+    get hasAddedChildren(): boolean {
         return this.addedChildren.length > 0;
     }
 
     get changed(): boolean {
-        return this.deleted || this.edited || this.childrenAdded;
+        return this.deleted || this.edited || this.hasAddedChildren;
     }
 
     public getChanges(): undefined | db.NodeChange<Document> {

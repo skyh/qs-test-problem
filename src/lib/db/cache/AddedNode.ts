@@ -51,4 +51,8 @@ export class AddedNode<Document> implements db.cache.AddedNode<Document> {
     public discardAddedChildren(): void {
         this.addedChildren = [];
     }
+
+    public get hasAddedChildren(): boolean {
+        return this.addedChildren.length > 0;
+    }
 }
