@@ -112,6 +112,8 @@ export namespace db.cache {
         readonly handlePath: db.Path
         readonly key: db.PathSegment
         createHandleNode(handle: db.DocumentHandle<T>): HandleNode<T>
+        isEphemeral(): boolean
+        deepestNonEphemeral(): {node: MissingNode<T>, skipped: number}
     }
 
     export interface NodeWithAddedChildren<T> {

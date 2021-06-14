@@ -66,6 +66,38 @@ export class MissingNode<T> extends Node<T> implements db.cache.MissingNode<T> {
         node.children = this.children;
         return node;
     }
+
+    private getEphemeralReplacement(): undefined | MissingNode<T> {
+        const {children} = this;
+        if (children.length === 0) return;
+
+        const firstChild = children[0];
+        if (firstChild.type === "MISSING" && firstChild.isEphemeral()) {
+            return firstChild;
+        }
+    }
+
+    public isEphemeral(): boolean {
+        const {children} = this;
+        return children.length === 1 && children[0].type === "MISSING";
+    }
+
+    public deepestNonEphemeral(): {node: MissingNode<T>, skipped: number} {
+        let node: MissingNode<T> = this;
+        let skipped = 0;
+
+        while (node.isEphemeral()) {
+            const firstChild = node.children[0];
+            if (firstChild.type === "MISSING") {
+                skipped = skipped + 1;
+                node = firstChild;
+            } else {
+                break;
+            }
+        }
+
+        return {skipped, node};
+    }
 }
 
 export class HandleNode<Document> extends Node<Document> implements db.cache.HandleNode<Document> {

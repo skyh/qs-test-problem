@@ -110,7 +110,7 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
                 />}
 
                 <div onContextMenu={onContextMenu}>
-                    <Children node={props.node as any} selectedNode={selectedNode} onNodeSelect={onNodeSelect} onNodeActivate={onNodeActivate as any}/>
+                    <Children node={props.node} selectedNode={selectedNode} onNodeSelect={onNodeSelect} onNodeActivate={onNodeActivate}/>
                 </div>
             </div>
         );

@@ -8,7 +8,7 @@ import styles from "./Children.module.sass";
 
 interface Props<Document> {
     nodes: ReadonlyArray<db.storage.DocumentNode<Document>>
-    selectedNode?: this["nodes"][number]
+    selectedNode: undefined | this["nodes"][number]
     onNodeSelect: (node: this["nodes"][number]) => void
     onNodeActivate: (node: this["nodes"][number]) => void
 }

@@ -6,7 +6,9 @@ import {HOCProps} from "../HOCProps";
 import {RowProps} from "../RowProps";
 import styles from "./MissingNodeRow.module.sass";
 
-type Props<Document> = RowProps<db.cache.MissingNode<Document>>
+interface Props<Document> extends RowProps<db.cache.MissingNode<Document>> {
+    skipped?: number
+}
 
 export const CreateMissingNodeRow = <Document extends any>(hocProps: HOCProps<Document>) => {
     const MissingNodeRow: FC<Props<Document>> = (props) => {
@@ -25,9 +27,12 @@ export const CreateMissingNodeRow = <Document extends any>(hocProps: HOCProps<Do
             });
         }, [props]);
 
+        const {skipped = 0} = props;
+        const missing = skipped + 1;
+
         return (
             <div className={className} onMouseDown={onMouseDown} onDoubleClick={onDoubleClick}>
-                Missing document
+                {missing === 1 ? `Missing document` : `Missing ${missing} documents`}
             </div>
         );
     };
