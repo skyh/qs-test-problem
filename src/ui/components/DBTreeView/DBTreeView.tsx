@@ -24,6 +24,9 @@ export const CreateDBTreeView = <Document extends any>(hocProps: HOCProps<Docume
         }, []);
 
         const onNodeActivate = useCallback((node: DocumentNode) => {
+            if (node.deleted) {
+                return;
+            }
             props.onActivate(node.getHandle());
             setSelectedNode(undefined);
         }, [props]);

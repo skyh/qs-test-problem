@@ -78,7 +78,7 @@ export class Storage<T> implements db.storage.Storage<T> {
                 break;
 
             case "deleted":
-                node.deleted = true;
+                node.delete();
                 result.affected.push(change.handlePath);
                 break;
         }

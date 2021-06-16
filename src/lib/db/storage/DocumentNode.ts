@@ -19,6 +19,9 @@ export class DocumentNode<T> extends Node<T> implements db.storage.DocumentNode<
     }
 
     public delete() {
+        for (const child of this.children) {
+            child.delete();
+        }
         this.deleted = true;
     }
 

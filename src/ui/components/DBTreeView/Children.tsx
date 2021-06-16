@@ -22,10 +22,6 @@ export const CreateChildren = <Document extends any>(hocProps: HOCProps<Document
         return (
             <ul className={styles.Children}>
                 {nodes.map((node, i) => {
-                    if (node.deleted) {
-                        return null;
-                    }
-
                     return (
                         <li key={i}>
                             <Row node={node} selected={props.selectedNode === node} onSelect={props.onNodeSelect} onActivate={props.onNodeActivate}/>

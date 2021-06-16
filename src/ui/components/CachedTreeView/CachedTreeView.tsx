@@ -67,6 +67,11 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
             setSelectedNode(undefined);
         }
 
+        const allowContextMenu = selectedNode && (
+            selectedNode.type !== "HANDLE" ||
+            selectedNode.type === "HANDLE" && !selectedNode.deleted
+        );
+
         return (
             <div className={styles.CachedTreeView}>
                 {editingNode && <Popup onHide={() => setEditingNode(undefined)}>
@@ -82,7 +87,7 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
                     }}/>
                 </Popup>}
 
-                {(contextMenuPosition && selectedNode) && <NodeContextMenu
+                {(contextMenuPosition && selectedNode && allowContextMenu) && <NodeContextMenu
                     position={contextMenuPosition}
                     node={selectedNode}
                     onDeactivate={onContextMenuDeactivate}
@@ -93,10 +98,6 @@ export const CreateCachedTreeView = <Document extends any>(hocProps: HOCProps<Do
                     }}
                     onNodeDiscardEdit={(node) => {
                         node.resetEditedDocument();
-                        forceRerenderHack();
-                    }}
-                    onNodeUndelete={(node) => {
-                        node.undelete();
                         forceRerenderHack();
                     }}
                     onDocumentRequest={onDocumentRequest}

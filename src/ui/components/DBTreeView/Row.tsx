@@ -28,8 +28,9 @@ export const CreateRow = <Document extends any>(hocProps: HOCProps<Document>) =>
         const className = useMemo(() => {
             return clsx(styles.Row, {
                 [styles.selected]: props.selected,
+                [styles.deleted]: props.node.deleted,
             });
-        }, [props.selected]);
+        }, [props]);
 
         return (
             <div className={className} onMouseDown={onMouseDown} onDoubleClick={onDoubleClick}>

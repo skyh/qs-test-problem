@@ -50,10 +50,7 @@ export const CreateChildren = <T extends any>(hocProps: HOCProps<T>) => {
                     return (
                         <li key={i}>
                             <Row node={node} selected={node === props.selectedNode} onSelect={props.onNodeSelect} onActivate={props.onNodeActivate}/>
-                            {node.type === "HANDLE" && node.deleted
-                                ? null
-                                : <Children selectedNode={props.selectedNode} node={node}
-                                          onNodeSelect={props.onNodeSelect} onNodeActivate={props.onNodeActivate}/>}
+                            <Children selectedNode={props.selectedNode} node={node} onNodeSelect={props.onNodeSelect} onNodeActivate={props.onNodeActivate}/>
                         </li>
                     );
                 })}

@@ -27,7 +27,7 @@ export class Cache<T> implements db.cache.Cache<T> {
                 return existingNode;
             } else if (existingNode instanceof MissingNode) {
                 const handleNode = existingNode.createHandleNode(handle);
-                existingNode.parent.replaceChild(existingNode, handleNode);
+                this.replaceMissingNode(existingNode, handleNode);
                 return handleNode;
             } else {
                 throw new Error("Not implemented");
@@ -38,6 +38,11 @@ export class Cache<T> implements db.cache.Cache<T> {
         const node = parentNode.appendHandle(handle);
         this.setNodeWithHandlePath(handlePath, node);
         return node;
+    }
+
+    private replaceMissingNode(oldNode: MissingNode<T>, newNode: HandleNode<T>) {
+        oldNode.parent.replaceChild(oldNode, newNode);
+        this.setNodeWithHandlePath(newNode.handlePath, newNode);
     }
 
     public removeHandle(encoded: db.SerializedPath): void {

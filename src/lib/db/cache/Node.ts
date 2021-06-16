@@ -17,6 +17,10 @@ export class Node<T> implements db.cache.Node<T> {
         assert(this.children[oldNode.key] === oldNode, "Old node is not a child node");
         this.children[oldNode.key] = newNode;
         newNode.key = oldNode.key;
+        newNode.children = oldNode.children;
+        for (const child of newNode.children) {
+            child.parent = newNode;
+        }
     }
 
     public appendMissing(handlePath: db.Path): MissingNode<T> {
@@ -56,7 +60,7 @@ export class MissingNode<T> extends Node<T> implements db.cache.MissingNode<T> {
 
     public key: db.PathSegment = -1;
 
-    constructor(public readonly parent: Node<T>, public readonly handlePath: db.Path,) {
+    constructor(public parent: Node<T>, public readonly handlePath: db.Path,) {
         super();
     }
 
@@ -65,16 +69,6 @@ export class MissingNode<T> extends Node<T> implements db.cache.MissingNode<T> {
         node.key = this.key;
         node.children = this.children;
         return node;
-    }
-
-    private getEphemeralReplacement(): undefined | MissingNode<T> {
-        const {children} = this;
-        if (children.length === 0) return;
-
-        const firstChild = children[0];
-        if (firstChild.type === "MISSING" && firstChild.isEphemeral()) {
-            return firstChild;
-        }
     }
 
     public isEphemeral(): boolean {
@@ -98,6 +92,14 @@ export class MissingNode<T> extends Node<T> implements db.cache.MissingNode<T> {
 
         return {skipped, node};
     }
+
+    public get deleted(): boolean {
+        const parent = this.parent;
+        if (parent instanceof HandleNode || parent instanceof MissingNode) {
+            return parent.deleted;
+        }
+        return false;
+    }
 }
 
 export class HandleNode<Document> extends Node<Document> implements db.cache.HandleNode<Document> {
@@ -106,10 +108,10 @@ export class HandleNode<Document> extends Node<Document> implements db.cache.Han
     public readonly type = "HANDLE";
 
     public key: db.PathSegment = -1;
-    public deleted = false;
+    private _deleted = false;
     public addedChildren: AddedNode<Document>[] = [];
 
-    public constructor(public readonly parent: Node<Document>, public handle: db.DocumentHandle<Document>,) {
+    public constructor(public parent: Node<Document>, public handle: db.DocumentHandle<Document>,) {
         super();
     }
 
@@ -128,13 +130,13 @@ export class HandleNode<Document> extends Node<Document> implements db.cache.Han
     }
 
     get changed(): boolean {
-        return this.deleted || this.edited || this.hasAddedChildren;
+        return this._deleted || this.edited || this.hasAddedChildren;
     }
 
     public getChanges(): undefined | db.NodeChange<Document> {
         if (!this.changed) return;
 
-        if (this.deleted) {
+        if (this._deleted) {
             return {
                 handlePath: this.handle.path, type: "deleted",
             };
@@ -171,15 +173,15 @@ export class HandleNode<Document> extends Node<Document> implements db.cache.Han
     }
 
     public delete() {
-        this.deleted = true;
+        this._deleted = true;
     }
 
     public undelete() {
-        this.deleted = false;
+        this._deleted = false;
     }
 
     public discardChanges() {
-        this.deleted = false;
+        this._deleted = false;
         this.resetEditedDocument();
         this.addedChildren = [];
     }
@@ -192,5 +194,22 @@ export class HandleNode<Document> extends Node<Document> implements db.cache.Han
 
     public discardAddedChildren(): void {
         this.addedChildren = [];
+    }
+
+    public get deleted(): boolean {
+        if (this._deleted) {
+            return this._deleted;
+        }
+
+        const parent = this.parent as Node<Document> | HandleNode<Document>;
+        if ("deleted" in parent) {
+            return parent.deleted;
+        } else {
+            return false;
+        }
+    }
+
+    public set deleted(value: boolean) {
+        this._deleted = value;
     }
 }
