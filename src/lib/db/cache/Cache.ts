@@ -82,6 +82,14 @@ export class Cache<T> implements db.cache.Cache<T> {
         }
     }
 
+    public discardAddedChildren(): void {
+        for (const node of this.iterateDFS()) {
+            if (node instanceof HandleNode) {
+                node.discardAddedChildren();
+            }
+        }
+    }
+
     public *iterateChanges(): IterableIterator<db.NodeChange<T>> {
         for (const node of this.iterateDFS()) {
             if (!isHandleNode<T>(node)) continue;

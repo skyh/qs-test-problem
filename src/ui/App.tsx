@@ -65,7 +65,7 @@ export const App: FC = () => {
 
     const onApplyChangesClick = useCallback(() => {
         const changes = cache.getChanges();
-        cache.discardChanges();
+        cache.discardAddedChildren();
 
         const {affected} = storage.applyChanges(changes);
 

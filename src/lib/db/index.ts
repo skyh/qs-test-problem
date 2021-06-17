@@ -92,6 +92,7 @@ export namespace db.cache {
         removeHandle(path: db.SerializedPath): void
         getChanges(): db.StorageChange<T>
         discardChanges(): void
+        discardAddedChildren(): void
     }
 
     export type LiveNode<T> = AddedNode<T> | HandleNode<T>
