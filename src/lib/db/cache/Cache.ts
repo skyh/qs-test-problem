@@ -1,4 +1,3 @@
-import {assert} from "../../assert";
 import {db} from "../index";
 import {Path} from "../Path";
 import {CacheNode} from "./CacheNode";
@@ -48,8 +47,9 @@ export class Cache<T> implements db.cache.Cache<T> {
     public removeHandle(encoded: db.SerializedPath): void {
         const path = Path.create(encoded);
         const node = this.getNodeWithHandlePath(path);
-        assert(isCacheNode<T>(node), "Can't remove node");
-        this.removeNodeAndAllMissingParents(node);
+        if (isCacheNode<T>(node)) {
+            this.removeNodeAndAllMissingParents(node);
+        }
     }
 
     private removeNodeAndAllMissingParents(node: CacheNode<T>): void {

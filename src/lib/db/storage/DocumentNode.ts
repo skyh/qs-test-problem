@@ -42,6 +42,14 @@ export class DocumentNode<T> extends Node<T> implements db.storage.DocumentNode<
             .reverse());
     }
 
+    public appendChild(document: T): DocumentNode<T> {
+        const node = super.appendChild(document);
+        if (this.deleted) {
+            node.delete();
+        }
+        return node;
+    }
+
     public* upward(): IterableIterator<DocumentNode<T>> {
         let node: null | DocumentNode<T> = this;
         do {
